@@ -18,3 +18,9 @@ class Model():
 
     def parameters(self):
         return [self.W, self.b1, self.U, self.b2]
+    
+    def to(self, device) -> None:
+        self.W.to(device)
+        self.b1.to(device)
+        self.U.to(device)
+        self.b2.to(device)

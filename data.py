@@ -81,6 +81,11 @@ class DataGenerator(Dataset):
         return Vocab(embedding_path)
     
 
+    def get_vocab_size(self) -> int:
+        """ retourne la taille du vocabulaire """
+        return self.vocab_size
+
+
     def text_to_indexes(self,
                         text: Text_type, 
                         dico: Dict[str, int]) -> Indix_Type:
@@ -135,6 +140,26 @@ class DataGenerator(Dataset):
 
     
 
+def create_generator(file: str, 
+                     context_length: int, 
+                     embedding_dim: int, 
+                     line_by_line: bool, 
+                     batch_size: int,
+                     shuffle: bool,
+                     drop_last: bool) -> Tuple[DataLoader, int]:
+    """ Renvoie le dataloader et la taille du vocabulaire"""
+    
+    dataset = DataGenerator(file, 
+                            context_length=context_length, 
+                            embedding_dim=embedding_dim, 
+                            line_by_line=line_by_line)
+
+    generator = DataLoader(dataset,
+                           batch_size=batch_size, 
+                           shuffle=shuffle, 
+                           drop_last=drop_last)
+    
+    return generator, dataset.get_vocab_size()
 
 
 if __name__ == '__main__':
