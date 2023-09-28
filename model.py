@@ -20,15 +20,25 @@ class Model():
         return y
 
     def parameters(self) -> List[torch.Tensor]:
+        """ retourne les parameters du model """
         return [self.W, self.b1, self.U, self.b2]
     
     def to(self, device: torch.device) -> None:
+        """ deplace les parameters du model dans le divice """
         self.W.to(device)
         self.b1.to(device)
         self.U.to(device)
         self.b2.to(device)
     
     def save(self, path: str) -> None:
+        """ sauvegarde les parametres dans <path> """
         if path[-3:] != '.pt':
             path += '.pt'
         torch.save(self.parameters(), path)
+    
+    def load_state_dict(self, checkpoints: List[torch.Tensor]) -> None:
+        """ load des poids du models """
+        self.W = checkpoints[0]
+        self.b1 = checkpoints[1]
+        self.U = checkpoints[2]
+        self.b2 = checkpoints[3]
