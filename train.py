@@ -46,13 +46,7 @@ def train() -> None:
 
             y_pred = model.forward(x)
 
-            # print(y_pred.shape)
-            # print(y_true.shape)
-            # print(y_true.squeeze().shape)
-
-            loss = criterion(y_pred, y_true.squeeze())
-            # loss = F.cross_entropy(y_true, y_pred)
-            # loss = F.mse_loss(y_true, y_pred)
+            loss = criterion(y_pred, y_true)
 
             total_loss += loss.item()
             print('loss:', loss.item(), end='\r')
