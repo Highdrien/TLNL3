@@ -17,7 +17,7 @@ def train() -> None:
     print('device:', device)
 
     # Get data
-    train_generator, vocab_size = create_generator( file=PARAM.FILE_TRAIN_1,
+    train_generator, vocab_size = create_generator( file=PARAM.FILE_TRAIN_0,
                                                     context_length=PARAM.CONTEXT_LENGTH,
                                                     embedding_dim=PARAM.EMBEDDING_DIM,
                                                     line_by_line=True,
@@ -56,6 +56,7 @@ def train() -> None:
             optimizer.zero_grad()
         
         print('loss:', total_loss / len(train_generator))
+        model.save(PARAM.CHECKPOINT_PATH)
 
 
 

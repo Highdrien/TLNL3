@@ -27,3 +27,8 @@ class Model():
         self.b1.to(device)
         self.U.to(device)
         self.b2.to(device)
+    
+    def save(self, path: str) -> None:
+        if path[-3:] != '.pt':
+            path += '.pt'
+        torch.save(self.parameters(), path)
