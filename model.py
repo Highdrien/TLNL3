@@ -13,6 +13,8 @@ class Model():
         self.U = torch.randn((hidden_layer, vocab_size), requires_grad=True)
         self.b2 = torch.randn((1, vocab_size), requires_grad=True)
 
+        self.context_length = context_length
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         h = F.relu(x @ self.W + self.b1)
         y = h @ self.U + self.b2
@@ -32,13 +34,15 @@ class Model():
     
     def save(self, path: str) -> None:
         """ sauvegarde les parametres dans <path> """
-        if path[-3:] != '.pt':
-            path += '.pt'
+        path += '_' + str(self.context_length) + '.pt'
         torch.save(self.parameters(), path)
     
-    def load_state_dict(self, checkpoints: List[torch.Tensor]) -> None:
+    def load(self, path: str) -> None:
         """ load des poids du models """
+        path += '_' + str(self.context_length) + '.pt'
+        checkpoints = torch.load(path)
         self.W = checkpoints[0]
         self.b1 = checkpoints[1]
         self.U = checkpoints[2]
         self.b2 = checkpoints[3]
+        del checkpoints

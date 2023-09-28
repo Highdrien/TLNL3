@@ -45,7 +45,7 @@ class DataGenerator(Dataset):
         self.embedding_dim = embedding_dim
 
         text = openfile(file, line_by_line)
-        text = self.text_to_indexes(text, self.vocab.dico_voca)
+        text = text_to_indexes(text, self.vocab.dico_voca)
         self.data = self.split_text(text)
 
         if line_by_line:
@@ -84,37 +84,6 @@ class DataGenerator(Dataset):
     def get_vocab_size(self) -> int:
         """ retourne la taille du vocabulaire """
         return self.vocab_size
-
-
-    def text_to_indexes(self,
-                        text: Text_type, 
-                        dico: Dict[str, int]) -> Indix_Type:
-        """ transforme un textes de str en une liste d'indice des mots 
-        si text est une liste de mots alors new_list sera une liste d'index
-        si text est une liste phrase (= liste de liste de mots alors new_list sera une liste de liste d'index)
-        lorsqu'un mot du text n'est pas dans le dico, il est remplacé par: '<unk>'
-        """
-        new_list = []
-        if type(text[0]) == str:
-            # text est une liste de mots
-            for word in text:
-                if word in dico:
-                    new_list.append(dico[word])
-                else:
-                    new_list.append('<unk>')
-
-        else:
-            # text est une liste de phrase
-            for sentence in text:
-                new_sentence = []
-                for word in sentence:
-                    if word in dico:
-                        new_sentence.append(dico[word])
-                    else:
-                        new_sentence.append('<unk>')
-                new_list.append(new_sentence)
-        
-        return new_list
     
 
     def split_text(self, text: Indix_Type) -> List[Indix_Type]:
@@ -137,29 +106,45 @@ class DataGenerator(Dataset):
                 new_list.append(new_sentence)
         
         return new_list
+    
+    def revese_dico(self) -> List[str]:
+        """ retourn le dictionnaire à l'envers: une liste tq si dico[mot]=i alors list[i]=mot"""
+        reversed_dico = [0 for i in range(self.vocab_size)]
+        for key, value in self.vocab.dico_voca.items():
+            reversed_dico[value] = key
+        return reversed_dico
 
     
 
-def create_generator(file: str, 
-                     context_length: int, 
-                     embedding_dim: int, 
-                     line_by_line: bool, 
-                     batch_size: int,
-                     shuffle: bool,
-                     drop_last: bool) -> Tuple[DataLoader, int]:
-    """ Renvoie le dataloader et la taille du vocabulaire"""
-    
-    dataset = DataGenerator(file, 
-                            context_length=context_length, 
-                            embedding_dim=embedding_dim, 
-                            line_by_line=line_by_line)
 
-    generator = DataLoader(dataset,
-                           batch_size=batch_size, 
-                           shuffle=shuffle, 
-                           drop_last=drop_last)
+def text_to_indexes(text: Text_type, 
+                    dico: Dict[str, int]) -> Indix_Type:
+    """ transforme un textes de str en une liste d'indice des mots 
+    si text est une liste de mots alors new_list sera une liste d'index
+    si text est une liste phrase (= liste de liste de mots alors new_list sera une liste de liste d'index)
+    lorsqu'un mot du text n'est pas dans le dico, il est remplacé par: '<unk>'
+    """
+    new_list = []
+    if type(text[0]) == str:
+        # text est une liste de mots
+        for word in text:
+            if word in dico:
+                new_list.append(dico[word])
+            else:
+                new_list.append('<unk>')
+
+    else:
+        # text est une liste de phrase
+        for sentence in text:
+            new_sentence = []
+            for word in sentence:
+                if word in dico:
+                    new_sentence.append(dico[word])
+                else:
+                    new_sentence.append('<unk>')
+            new_list.append(new_sentence)
     
-    return generator, dataset.get_vocab_size()
+    return new_list
 
 
 if __name__ == '__main__':

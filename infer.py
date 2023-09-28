@@ -26,9 +26,7 @@ def infer(x: torch.Tensor) -> torch.Tensor:
     model.to(device)
 
     # Load model weigth
-    checkpoints = torch.load(PARAM.CHECKPOINT_PATH)
-    model.load_state_dict(checkpoints)
-    del checkpoints
+    model.load(PARAM.CHECKPOINT_PATH)
 
     with torch.no_grad():
         y_pred = model.forward(x)
