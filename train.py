@@ -1,5 +1,5 @@
 import torch
-import torch.nn.functional as F
+# import torch.nn.functional as F
 import torch.optim as optim
 
 from data import create_generator
@@ -32,6 +32,7 @@ def train() -> None:
                   vocab_size=vocab_size)
     model.to(device)
     
+    criterion = torch.nn.CrossEntropyLoss(reduction='mean')
     optimizer = optim.Adam(model.parameters(), lr=PARAM.LEARNING_RATE)
 
 
@@ -45,10 +46,16 @@ def train() -> None:
 
             y_pred = model.forward(x)
 
-            loss = F.cross_entropy(y_true, y_pred)
+            # print(y_pred.shape)
+            # print(y_true.shape)
+            # print(y_true.squeeze().shape)
+
+            loss = criterion(y_pred, y_true.squeeze())
+            # loss = F.cross_entropy(y_true, y_pred)
             # loss = F.mse_loss(y_true, y_pred)
 
             total_loss += loss.item()
+            print('loss:', loss.item(), end='\r')
 
             loss.backward()
             optimizer.step()
