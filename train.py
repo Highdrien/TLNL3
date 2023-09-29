@@ -24,17 +24,24 @@ def train(save_weigth: bool) -> None:
                                     context_length=PARAM.CONTEXT_LENGTH,
                                     embedding_dim=PARAM.EMBEDDING_DIM,
                                     line_by_line=True)
+    val_generator = DataGenerator(mode='val',
+                                  data_path=PARAM.DATA_PATH,
+                                  context_length=PARAM.CONTEXT_LENGTH,
+                                  embedding_dim=PARAM.EMBEDDING_DIM,
+                                  line_by_line=True)
     
     vocab_size = train_generator.get_vocab_size()
-    if vocab_size != PARAM.VOCAB_SIZE:
-        print('Warning: vocab_size != PARAM.VOCAB_SIZE')
-        print(vocab_size)
+    assert vocab_size == PARAM.VOCAB_SIZE, 'Warning: vocab_size != PARAM.VOCAB_SIZE'
     print('dataset size:', len(train_generator))
 
     train_generator = DataLoader(train_generator,
                                  batch_size=PARAM.BATCH_SIZE,
                                  shuffle=True,
                                  drop_last=False)
+    val_generator = DataLoader(val_generator,
+                               batch_size=PARAM.BATCH_SIZE,
+                               shuffle=True,
+                               drop_last=False)
 
     # Get model
     model = Model(embedding_dim=PARAM.EMBEDDING_DIM, 
@@ -43,14 +50,18 @@ def train(save_weigth: bool) -> None:
                   vocab_size=vocab_size)
     model.to(device)
     
+    # Loss, optimizer and scheduler
     criterion = torch.nn.CrossEntropyLoss(reduction='mean')
     optimizer = torch.optim.Adam(model.parameters(), lr=PARAM.LEARNING_RATE)
     scheduler = MultiStepLR(optimizer, milestones=PARAM.MILESSTONE, gamma=PARAM.GAMMA)
 
+
     for epoch in range(1, PARAM.NUM_EPOCHS + 1):
         print('epoch:', epoch)
-        total_loss = 0
+        train_loss = 0
         train_range = tqdm(train_generator)
+
+        # Training
         for x, y_true in train_range:
             
             x.to(device)
@@ -60,7 +71,7 @@ def train(save_weigth: bool) -> None:
 
             loss = criterion(y_pred, y_true)
 
-            total_loss += loss.item()
+            train_loss += loss.item()
 
             loss.backward()
             optimizer.step()
@@ -69,7 +80,26 @@ def train(save_weigth: bool) -> None:
             train_range.set_description("TRAIN -> epoch: %4d || loss: %4.4f" % (epoch, loss.item()))
             train_range.refresh()
         
-        print('loss:', total_loss / len(train_generator))
+        # Validation
+        with torch.no_grad():
+            val_loss = 0
+            val_range = tqdm(val_generator)
+            for x, y_true in val_range:
+                x.to(device)
+                y_true.to(device)
+
+                y_pred = model.forward(x)
+
+                loss = criterion(y_pred, y_true)
+
+                val_loss += loss.item()
+
+                val_range.set_description("VAL -> epoch: %4d || loss: %4.4f" % (epoch, loss.item()))
+                val_range.refresh()
+        
+
+        print("train loss: %4.4f | val loss: %4.4f" % (train_loss / len(train_generator), val_loss / len(val_generator)))
+    
         if save_weigth:
             model.save(PARAM.CHECKPOINT_PATH)
         scheduler.step()
