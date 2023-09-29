@@ -9,7 +9,7 @@ from model import Model
 import parameters as PARAM 
 
 
-def train(training_file: str, save_weigth: bool) -> None:
+def train(save_weigth: bool) -> None:
 
     # Use gpu or cpu
     if torch.cuda.is_available():
@@ -19,7 +19,8 @@ def train(training_file: str, save_weigth: bool) -> None:
     print('device:', device)
 
     # Get data
-    train_generator = DataGenerator(file=training_file,
+    train_generator = DataGenerator(mode='train',
+                                    data_path=PARAM.DATA_PATH,
                                     context_length=PARAM.CONTEXT_LENGTH,
                                     embedding_dim=PARAM.EMBEDDING_DIM,
                                     line_by_line=True)
@@ -76,4 +77,4 @@ def train(training_file: str, save_weigth: bool) -> None:
 
 
 if __name__ == '__main__':
-    train(PARAM.FILE_TRAIN_0, save_weigth=False)
+    train(save_weigth=False)

@@ -12,7 +12,8 @@ def genere(nb_mots: int, input: List[str]=None) -> List[int]:
     """ genere un texte à partir d'un début de phrase ou non """
 
     # Get vocab
-    train_generator = DataGenerator(file=PARAM.FILE_TRAIN_0,
+    train_generator = DataGenerator(mode='train',
+                                    data_path=PARAM.DATA_PATH,
                                     context_length=PARAM.CONTEXT_LENGTH,
                                     embedding_dim=PARAM.EMBEDDING_DIM,
                                     line_by_line=True)

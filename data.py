@@ -38,11 +38,22 @@ def openfile(file: str, line_by_line: bool=False) -> Text_type:
 
 
 class DataGenerator(Dataset):
-    def __init__(self, file: str, context_length: int, embedding_dim: int, line_by_line: bool) -> None:
+    def __init__(self, 
+                 mode: str,
+                 data_path: str, 
+                 context_length: int, 
+                 embedding_dim: int, 
+                 line_by_line: bool) -> None:
+
+        assert mode in ['train', 'val', 'test'], "mode must be 'train', 'val', or 'test'"
+        print('mode:', mode)
+        file = os.path.join(data_path, 'Le_comte_de_Monte_Cristo.' + mode + '.txt')
+
         self.vocab = self.get_vocab()
         self.vocab_size = len(self.vocab.dico_voca)
         self.context_length = context_length
         self.embedding_dim = embedding_dim
+        self.data_path = data_path
 
         text = openfile(file, line_by_line)
         text = text_to_indexes(text, self.vocab.dico_voca)
@@ -148,8 +159,7 @@ def text_to_indexes(text: Text_type,
 
 
 if __name__ == '__main__':
-    file = os.path.join('data', 'Le_comte_de_Monte_Cristo.train.100.unk5.tok')
-    dataset = DataGenerator(file, context_length=3, embedding_dim=100, line_by_line=True)
+    dataset = DataGenerator('train', data_path='data', context_length=3, embedding_dim=100, line_by_line=True)
     x, y = dataset.__getitem__(3)
     print('sans le DATALOADER')
     print(x.shape)
