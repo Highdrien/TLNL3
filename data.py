@@ -6,16 +6,15 @@ from torch.utils.data import Dataset, DataLoader
 
 from Vocab import Vocab
 
-# Type: # les textes pouvent être des liste de mots où des liste des phrases.
+# Type: # text can be a list of words or a list of sentences (ie list of list of words)
 Text_type   = Union[List[str], List[List[str]]]
 Indix_Type  = Union[List[int], List[List[int]]]
 
 
 def openfile(file: str, line_by_line: bool=False) -> Text_type:
     """
-    prend un chemin ou une liste de chemain vers un texte 
-    et renvoie la liste de mots que contients ce texte
-    si line_by_line = True, renvoie la liste de phrase (donc une list de list de mots)
+    take a file name and return a list of the word of the file
+    if line_by_line=True, the output will be a list of sentences
     """
     text = []
 
@@ -67,15 +66,15 @@ class DataGenerator(Dataset):
 
 
     def __len__(self) -> int:
-        """ renvoie le nombre de données """
+        """ return the number of data """
         return len(self.data)
     
 
     def __getitem__(self, index: int) -> Tuple[torch.tensor, torch.tensor]:
         """
-        prend un index des données et renvoie x, y tq:
-        - x est une matrice k,embedding_dim contenant les embeddings des k premiers mot
-        - y est un tensor hot-one qui corrspond à l'indice du mots à prédire
+        take a data index and return x, y such that:
+        - x are a tensor with a shape: (context_length, embedding_dim) which is the context of the sentence
+        - y are a hot-one encoding tensor which represents the index of the predicted word
         """
         x = torch.zeros((self.context_length, self.embedding_dim))
         for i in range(self.context_length):
@@ -87,29 +86,26 @@ class DataGenerator(Dataset):
     
 
     def get_vocab(self) -> Vocab:
-        """ retourne le vocal du ficher embeddings"""
+        """ return the Vocal associated with embedding_file """
         embedding_path = os.path.join('data', 'embeddings-word2vecofficial.train.unk5.txt')
         return Vocab(embedding_path)
     
 
     def get_vocab_size(self) -> int:
-        """ retourne la taille du vocabulaire """
+        """ return size of the dictionary of the Vocab """
         return self.vocab_size
     
 
     def split_text(self, text: Indix_Type) -> List[Indix_Type]:
-        """  
-        fonction produit en sortie une liste dont les eléments sont des listes 
-        de <context_length> mots consécutifs de T représentés par leur indices.
-        """
+        """ take a text and return all the <context_length> consecutive words """
         new_list = []
         if type(text[0]) == int:
-            # text est une liste d'indices
+            # text is a list of word index
             for i in range(len(text) - self.context_length):
                 new_list.append(text[i : i + self.context_length + 1])
 
         else:
-            # text est une liste de liste d'indices
+            # text is a list of sentences
             for sentence in text:
                 new_sentence = []
                 for i in range(len(sentence) - self.context_length):
@@ -119,7 +115,8 @@ class DataGenerator(Dataset):
         return new_list
     
     def revese_dico(self) -> List[str]:
-        """ retourn le dictionnaire à l'envers: une liste tq si dico[mot]=i alors list[i]=mot"""
+        """ return the revesed dictionary
+        the output is a list such that  if dict[word] = i also output[i] = word"""
         reversed_dico = [0 for i in range(self.vocab_size)]
         for key, value in self.vocab.dico_voca.items():
             reversed_dico[value] = key
@@ -130,14 +127,14 @@ class DataGenerator(Dataset):
 
 def text_to_indexes(text: Text_type, 
                     dico: Dict[str, int]) -> Indix_Type:
-    """ transforme un textes de str en une liste d'indice des mots 
-    si text est une liste de mots alors new_list sera une liste d'index
-    si text est une liste phrase (= liste de liste de mots alors new_list sera une liste de liste d'index)
-    lorsqu'un mot du text n'est pas dans le dico, il est remplacé par: '<unk>'
+    """ transforms str text into a word index list 
+    if text is a word list, then new_list will be an index list
+    if text is a phrase list (= word list then new_list will be an index list)
+    when a word in text is not in the dictionary, it is replaced by: '<unk>'
     """
     new_list = []
     if type(text[0]) == str:
-        # text est une liste de mots
+        # text is a list of words
         for word in text:
             if word in dico:
                 new_list.append(dico[word])
@@ -145,7 +142,7 @@ def text_to_indexes(text: Text_type,
                 new_list.append('<unk>')
 
     else:
-        # text est une liste de phrase
+        # text is a list of sentences
         for sentence in text:
             new_sentence = []
             for word in sentence:
@@ -161,13 +158,13 @@ def text_to_indexes(text: Text_type,
 if __name__ == '__main__':
     dataset = DataGenerator('train', data_path='data', context_length=3, embedding_dim=100, line_by_line=True)
     x, y = dataset.__getitem__(3)
-    print('sans le DATALOADER')
+    print('without DATALOADER')
     print(x.shape)
     print(y.shape)
     print()
 
     data_generator = DataLoader(dataset,batch_size=10, shuffle=True, drop_last=True)
-    print('Avec le DATALOADER')
+    print('with DATALOADER')
     for x, y in data_generator:
         print(x.shape)
         print(y.shape)

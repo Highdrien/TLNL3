@@ -9,7 +9,8 @@ import parameters as PARAM
 
 
 def genere(nb_mots: int, input: List[str]=None) -> List[int]:
-    """ genere un texte à partir d'un début de phrase ou non """
+    """ generate a text from an input text
+    if the input text is None, generate a text from <s><s>...<s> """
 
     # Get vocab
     train_generator = DataGenerator(mode='train',
@@ -55,7 +56,7 @@ def genere(nb_mots: int, input: List[str]=None) -> List[int]:
     
     with torch.no_grad():
         nb_mots_predit = 0
-        while nb_mots_predit < nb_mots and output[-1] != '<\s>':
+        while nb_mots_predit < nb_mots and output[-1] != '</s>':
             new_word = model.forward(context)[0]
             new_word[index_to_ignore] = float('-inf')
             new_word = F.softmax(new_word, dim=0)
@@ -73,7 +74,7 @@ def genere(nb_mots: int, input: List[str]=None) -> List[int]:
 
 
 if __name__ == '__main__':
-    input = ['il', 'va', 'au', 'travail']
+    input = ['il', 'va', 'au', 'travail', 'sans']
     print(input)
     output = genere(nb_mots=10, input=input)
     print(output)

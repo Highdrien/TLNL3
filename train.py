@@ -27,7 +27,7 @@ def train(save_weigth: bool) -> None:
     
     vocab_size = train_generator.get_vocab_size()
     if vocab_size != PARAM.VOCAB_SIZE:
-        print('attention: vocab_size != PARAM.VOCAB_SIZE')
+        print('Warning: vocab_size != PARAM.VOCAB_SIZE')
         print(vocab_size)
     print('dataset size:', len(train_generator))
 
