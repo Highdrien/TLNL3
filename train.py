@@ -2,12 +2,13 @@ import torch
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import MultiStepLR
 from tqdm import tqdm
+import numpy as np
 import matplotlib.pyplot as plt
+
 from data import DataGenerator
 from model import Model
 import parameters as PARAM 
 from metrics import accuracy
-import numpy as np
 
 
 def train(save_weigth: bool) -> None:
@@ -24,16 +25,20 @@ def train(save_weigth: bool) -> None:
                                     data_path=PARAM.DATA_PATH,
                                     context_length=PARAM.CONTEXT_LENGTH,
                                     embedding_dim=PARAM.EMBEDDING_DIM,
-                                    line_by_line=True)
+                                    line_by_line=True,
+                                    learn_embedding=PARAM.LEARN_EMBEDDING)
     val_generator = DataGenerator(mode='val',
                                   data_path=PARAM.DATA_PATH,
                                   context_length=PARAM.CONTEXT_LENGTH,
                                   embedding_dim=PARAM.EMBEDDING_DIM,
-                                  line_by_line=True)
+                                  line_by_line=True,
+                                  learn_embedding=PARAM.LEARN_EMBEDDING)
     
     vocab_size = train_generator.get_vocab_size()
     assert vocab_size == PARAM.VOCAB_SIZE, 'Warning: vocab_size != PARAM.VOCAB_SIZE'
     print('dataset size:', len(train_generator))
+    if PARAM.LEARN_EMBEDDING and not(PARAM.LEARN_EMBEDDING_FROM_SCRATCH):
+        embedding = train_generator.get_embedding()
 
     train_generator = DataLoader(train_generator,
                                  batch_size=PARAM.BATCH_SIZE,
@@ -48,8 +53,12 @@ def train(save_weigth: bool) -> None:
     model = Model(embedding_dim=PARAM.EMBEDDING_DIM, 
                   context_length=PARAM.CONTEXT_LENGTH, 
                   hidden_layer=PARAM.HIDDEN_LAYER, 
-                  vocab_size=vocab_size)
+                  vocab_size=vocab_size,
+                  learn_embedding=PARAM.LEARN_EMBEDDING)
     model.to(device)
+    if PARAM.LEARN_EMBEDDING and not(PARAM.LEARN_EMBEDDING_FROM_SCRATCH):
+        model.copy_embedding(embedding)
+        del embedding
     
     # Loss, optimizer and scheduler
     criterion = torch.nn.CrossEntropyLoss(reduction='mean')
@@ -88,7 +97,7 @@ def train(save_weigth: bool) -> None:
             train_range.set_description("TRAIN -> epoch: %4d || loss: %4.4f" % (epoch, loss.item()))
             train_range.refresh()
 
-        #print("TRAIN -> loss: %4.4f | acc: %4.2f" % (train_loss / n_train, train_acc / n_train))
+        # print("TRAIN -> loss: %4.4f | acc: %4.2f" % (train_loss / n_train, train_acc / n_train))
 
         
         # Validation
@@ -110,25 +119,24 @@ def train(save_weigth: bool) -> None:
 
                 val_range.set_description("VAL -> epoch: %4d || loss: %4.4f" % (epoch, loss.item()))
                 val_range.refresh()
-                
+        
+
         print("val accuracy: ",val_acc/n_val)
         # À la fin de chaque époque, ajoute la loss à la liste correspondante
         train_losses.append(train_loss/n_train)
         val_losses.append(val_loss/n_val)
-
-        #print("VAL -> loss: %4.4f | acc: %4.2f" % (val_loss / n_val, val_acc / n_val))
+        print("VAL -> loss: %4.4f | acc: %4.2f" % (val_loss / n_val, val_acc / n_val))
 
         if save_weigth:
             model.save(PARAM.CHECKPOINT_PATH)
         scheduler.step()
 
-    return(train_losses,val_losses)
+        return(train_losses, val_losses)
 
 
 
 if __name__ == '__main__':
-
-    train_list,val_list=train(save_weigth=False)
+    train_list, val_list = train(save_weigth=False)
     print(np.shape(train_list),print(np.shape(val_list)))
     # Créez un graphe des losses d'entraînement et de validation avec les hyperparamètres
     plt.figure(figsize=(10, 5))
@@ -145,8 +153,3 @@ if __name__ == '__main__':
     plt.annotate(hyperparameters_str, xy=(0.7, 0.2), xycoords='axes fraction', fontsize=10, color='gray')
     # Affichez le graphe à l'écran
     plt.show()
-    
-
-
-
-

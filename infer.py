@@ -35,5 +35,5 @@ def infer(x: torch.Tensor) -> torch.Tensor:
 
 
 if __name__ == '__main__':
-    x = torch.zeros((16, PARAM.EMBEDDING_DIM * PARAM.CONTEXT_LENGTH))
+    x = torch.zeros((PARAM.BATCH_SIZE, PARAM.EMBEDDING_DIM * PARAM.CONTEXT_LENGTH))
     y = infer(x)

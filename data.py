@@ -42,7 +42,18 @@ class DataGenerator(Dataset):
                  data_path: str, 
                  context_length: int, 
                  embedding_dim: int, 
-                 line_by_line: bool) -> None:
+                 line_by_line: bool,
+                 learn_embedding: bool) -> None:
+        """
+        Create a data generator
+        mode: must be train, val or test. Data will be selected accordingly to mode
+        context_length: number of words which the model take for the input
+        embedding_dim: the dimention of the embedding
+        line_by_line: the file will be read line by line (so it will not have the end of a sentence
+                        and the begining of the following sentente in the context)
+        lear_embedding: if true, __getitem__ will be return a x with a shape of (context_length, vobab_size)
+                        if false, it will be return a x with a shape of (context_length, embedding_dim)
+        """
 
         assert mode in ['train', 'val', 'test'], "mode must be 'train', 'val', or 'test'"
         print('mode:', mode)
@@ -53,6 +64,7 @@ class DataGenerator(Dataset):
         self.context_length = context_length
         self.embedding_dim = embedding_dim
         self.data_path = data_path
+        self.learn_embedding = learn_embedding
 
         text = openfile(file, line_by_line)
         text = text_to_indexes(text, self.vocab.dico_voca)
@@ -74,12 +86,18 @@ class DataGenerator(Dataset):
         """
         take a data index and return x, y such that:
         - x are a tensor with a shape: (context_length, embedding_dim) which is the context of the sentence
+                    of (context_length, vobab_size) if learn_embedding=1
         - y are a hot-one encoding tensor which represents the index of the predicted word
         """
-        x = torch.zeros((self.context_length, self.embedding_dim))
-        for i in range(self.context_length):
-            x[i] = self.vocab.get_emb_torch(self.data[index][i])
-        x = x.view(self.context_length * self.embedding_dim)
+        if not self.learn_embedding:
+            x = torch.zeros((self.context_length, self.embedding_dim))
+            for i in range(self.context_length):
+                x[i] = self.vocab.get_emb_torch(self.data[index][i])
+            x = x.view(self.context_length * self.embedding_dim)
+        else:
+            x = torch.zeros((self.context_length, self.vocab_size))
+            for i in range(self.context_length):
+                x[i] = torch.nn.functional.one_hot(torch.tensor(self.data[index][i]), num_classes=self.vocab_size)
         y = torch.nn.functional.one_hot(torch.tensor(self.data[index][-1]), num_classes=self.vocab_size)
         y = y.type(torch.float32)
         return x, y
@@ -121,7 +139,10 @@ class DataGenerator(Dataset):
         for key, value in self.vocab.dico_voca.items():
             reversed_dico[value] = key
         return reversed_dico
-
+    
+    def get_embedding(self) -> torch.Tensor:
+        """ return the embedding of the vocabulary """
+        return self.vocab.matrice
     
 
 
@@ -156,14 +177,22 @@ def text_to_indexes(text: Text_type,
 
 
 if __name__ == '__main__':
-    dataset = DataGenerator('train', data_path='data', context_length=3, embedding_dim=100, line_by_line=True)
+    dataset = DataGenerator(mode='train', 
+                            data_path='data', 
+                            context_length=3, 
+                            embedding_dim=100, 
+                            line_by_line=True, 
+                            learn_embedding=True)
     x, y = dataset.__getitem__(3)
     print('without DATALOADER')
     print(x.shape)
     print(y.shape)
     print()
 
-    data_generator = DataLoader(dataset,batch_size=10, shuffle=True, drop_last=True)
+    data_generator = DataLoader(dataset, 
+                                batch_size=10, 
+                                shuffle=True, 
+                                drop_last=True)
     print('with DATALOADER')
     for x, y in data_generator:
         print(x.shape)
