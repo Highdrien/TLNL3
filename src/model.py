@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 import os
 
 import torch
@@ -55,7 +55,6 @@ class Model():
     
     def load(self, path: str) -> None:
         """ load model weights """
-        path += '_' + str(self.context_length) + '.pt'
         checkpoints = torch.load(path)
         self.W = checkpoints[0]
         self.b1 = checkpoints[1]
@@ -69,26 +68,16 @@ class Model():
         """ copy a matrix of embedding """
         self.E = embedding
 
-    # def __str__(self) -> str:
-    #     output = ''
-    #     if self.learn_embedding:
-    #         output += 'expedted input shape: (batch_size, 1)'
-    #         output += 'Embedding layers'
-    #     else:
-    #         output += 'expedted input shape: (batch_size, ' + str(self.embedding_dim) + ')'
-    #     output += '\n'
-    #     output += 'FFN:'
-    #     output += '\n'
-    #     output += 'FFN:'
-    #     return output
 
-
-def get_model(config, embedding=None):
+def get_model(config: Dict, embedding: torch.Tensor=None):
+    """ get the model according the configuration 
+        if the model have to learn his own embedding from vect2vect, the model will copy the embedding"""
     model = Model(embedding_dim=config.model.embedding_dim, 
                   context_length=config.data.context_length, 
                   hidden_layer=config.model.hidden_layer, 
                   vocab_size=config.data.vocab_size,
                   learn_embedding=config.model.embedding.learn_embedding  )
+    
     if embedding is not None:
         if config.model.embedding.learn_embedding and config.model.embedding.learn_from_vect_to_vect:
             model.copy_embedding(embedding)

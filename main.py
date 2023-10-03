@@ -4,6 +4,7 @@ import argparse
 from easydict import EasyDict as edict
 
 from src.train import train
+from src.genere import genere
 
 
 def load_config(path='configs/config.yaml'):
@@ -30,8 +31,9 @@ def main(options):
     if options['mode'] == 'train':
         config = load_config(options['config_path'])
         train(config)
-    # elif options['mode'] == 'data':
-    #     config = load_config(options['config_path'])
+    elif options['mode'] in ['genere', 'generate']:
+        config = load_config(options['config_path'])
+        genere(config, options['path'])
 
 
 
@@ -41,7 +43,7 @@ if __name__ == "__main__":
     # Options
     parser.add_argument('--mode', default=None, type=str, help="choose a mode between 'train', 'genere'")
     parser.add_argument('--config_path', default=os.path.join('config', 'config.yaml'), type=str, help="path to config (for training)")
-    parser.add_argument('--path', type=str, help="experiment path (for test, prediction or resume previous training)")
+    parser.add_argument('--path', type=str, help="experiment path (for test, prediction or generate)")
 
     args = parser.parse_args()
     options = vars(args)

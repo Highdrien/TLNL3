@@ -1,25 +1,27 @@
-from typing import List
+import os
+from typing import List, Dict
 
 import torch
 import torch.nn.functional as F
 
 from src.data import DataGenerator, text_to_indexes
 from src.model import get_model
-# import parameters as PARAM 
 
 
-def genere(config) -> List[int]:
+def genere(config: Dict, logging_path: str) -> List[int]:
     """ generate a text from an input text
     if the input text is None, generate a text from <s><s>...<s> """
 
     # Get vocab
     train_generator = DataGenerator(config=config, mode='train')
     
-    vocab_size = train_generator.get_vocab_size()
     vocab = train_generator.vocab
     reversed_dico = train_generator.revese_dico()
     del train_generator
 
+    # get input data
+    input = get_input(config.generate.folder, config.generate.input_file)
+    print(input)
     if input is None:
         input = []
         output = []
@@ -30,26 +32,26 @@ def genere(config) -> List[int]:
     model = get_model(config, embedding=None)
     
     # Load model weigth
-    model.load(PARAM.CHECKPOINT_PATH)
+    model.load(os.path.join(logging_path, 'model.pt'))
 
     # Complete output by <s> if output is too short
-    if len(output) < PARAM.CONTEXT_LENGTH:
+    if len(output) < config.data.context_length:
         s_index = vocab.get_word_index('<s>')
-        for _ in range(PARAM.CONTEXT_LENGTH - len(output)):
+        for _ in range(config.data.context_length - len(output)):
             output.append(s_index)
         
     # Get context with embedding
-    context = torch.zeros((PARAM.CONTEXT_LENGTH, PARAM.EMBEDDING_DIM))
-    for k in range(PARAM.CONTEXT_LENGTH):
-        context[k] = vocab.get_emb_torch(output[- PARAM.CONTEXT_LENGTH + k])
-    context = context.reshape(PARAM.CONTEXT_LENGTH * PARAM.EMBEDDING_DIM)
+    context = torch.zeros((config.data.context_length, config.model.embedding_dim))
+    for k in range(config.data.context_length):
+        context[k] = vocab.get_emb_torch(output[- config.data.context_length + k])
+    context = context.reshape(config.data.context_length * config.model.embedding_dim)
 
     # remove possibility to generate <unk>
     index_to_ignore = vocab.get_word_index('<unk>')
     
     with torch.no_grad():
         nb_mots_predit = 0
-        while nb_mots_predit < nb_mots and output[-1] != '</s>':
+        while nb_mots_predit < config.generate.nb_words and output[-1] != '</s>':
             new_word = model.forward(context)[0]
             new_word[index_to_ignore] = float('-inf')
             new_word = F.softmax(new_word, dim=0)
@@ -58,20 +60,35 @@ def genere(config) -> List[int]:
             output.append(reversed_dico[idx.item()])
             nb_mots_predit += 1
 
-            context = torch.cat((context[PARAM.EMBEDDING_DIM:], vocab.get_emb_torch(idx)), dim=0)
+            context = torch.cat((context[config.model.embedding_dim:], vocab.get_emb_torch(idx)), dim=0)
 
     output = input + output[len(input):]
-    return output            
+    write_output(generate_path=config.generate.folder,
+                 output=output,
+                 output_file=config.generate.output_file,
+                 logging_path=logging_path)        
 
 
+def get_input(generate_path: str, input_file: str) -> List[str]:
+    if input_file not in os.listdir(generate_path):
+        return None
+    input = []
+    with open(os.path.join(generate_path, input_file), mode='r', encoding='utf8') as f:
+        for line in f.readlines():
+            input += line.split(' ')
+        f.close()
+    input = [word for word in input if word != ' ']
+    return input
 
 
-# if __name__ == '__main__':
-#     input = ['il', 'va', 'au', 'travail', 'sans']
-#     print(input)
-#     output = genere(nb_mots=10, input=input)
-#     print(output)
-
-
-    
-
+def write_output(generate_path: str, output: List[str], output_file: str, logging_path: str) -> None:
+    if '<experiment_name>' in output_file:
+        split = output_file.split('<experiment_name>')
+        output_file = split[0] + logging_path.split('\\')[-2] + split[1]
+        print(output_file)
+    output_path = os.path.join(generate_path, output_file)
+    with open(output_path, mode='w', encoding='utf8') as f:
+        for word in output:
+            f.write(word + ' ')
+        f.write('\n')
+        f.close()
