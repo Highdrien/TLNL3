@@ -1,4 +1,4 @@
-name: vect2vect
+name: experiement
 
 # data options
 data:
@@ -13,8 +13,8 @@ model:
   hidden_layer: 1024
   save_checkpoint: best
   embedding:
-    learn_embedding: false
-    learn_from_vect_to_vect: true
+    learn_embedding: true
+    learn_from_vect_to_vect: false
     vect_to_vect_path: data\embeddings-word2vecofficial.train.unk5.txt
 
 # learning options

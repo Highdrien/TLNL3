@@ -1,5 +1,15 @@
 # Projet TLNL 3:
 
+
+- [Projet TLNL 3:](#projet-tlnl-3)
+- [Run the code](#run-the-code)
+  - [Mode: train](#mode-train)
+  - [Mode: generate](#mode-generate)
+- [Results](#results)
+  - [Learn from vect2vect embedding](#learn-from-vect2vect-embedding)
+  - [Learn from scratch](#learn-from-scratch)
+
+
 # Run the code
 
 To run the program, simply execute the `main.py` file. However, there are several modes.
@@ -28,3 +38,11 @@ Then, the model will generate a text and save it in `generate\output_<name of ex
 <p align="center"><img src=logs/vect2vect_0/crossentropy.png><p>
 <p align="center"><img src=logs/vect2vect_0/accuracy.png><p>
 <p align="center"><img src=logs/vect2vect_0/top_k.png><p>
+
+## Learn from scratch
+
+`logs\learnfromscratch_0`: training with 10 epochs
+
+<p align="center"><img src=logs/learnfromscratch_0/crossentropy.png><p>
+<p align="center"><img src=logs/learnfromscratch_0/accuracy.png><p>
+<p align="center"><img src=logs/learnfromscratch_0/top_k.png><p>
