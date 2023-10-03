@@ -33,7 +33,7 @@ Then, the model will generate a text and save it in `generate\output_<name of ex
 
 ## Learn from vect2vect embedding
 
-`logs\vect2vect_0`: training with 10 epochs
+`logs\vect2vect_0`: use embedding which was created with vect2vect. training with 10 epochs
 
 <p align="center"><img src=logs/vect2vect_0/crossentropy.png><p>
 <p align="center"><img src=logs/vect2vect_0/accuracy.png><p>
@@ -41,7 +41,8 @@ Then, the model will generate a text and save it in `generate\output_<name of ex
 
 ## Learn from scratch
 
-`logs\learnfromscratch_0`: training with 10 epochs
+`logs\learnfromscratch_0`: create a random embedding matrix and learn the embedding to the problem.
+training with 10 epochs
 
 <p align="center"><img src=logs/learnfromscratch_0/crossentropy.png><p>
 <p align="center"><img src=logs/learnfromscratch_0/accuracy.png><p>
