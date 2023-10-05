@@ -25,10 +25,6 @@ def train(config: Dict) -> None:
     train_generator = DataGenerator(config=config, mode='train')
     val_generator = DataGenerator(config=config, mode='val')
     
-    # vocab_size = train_generator.get_vocab_size()
-    # assert vocab_size == config.data.vocab_size, 'Warning: vocab_size != PARAM.VOCAB_SIZE'
-    # print('dataset size:', len(train_generator))
-    # get embedding
     embedding = None
     if config.model.embedding.learn_embedding and config.model.embedding.learn_from_vect_to_vect:
         embedding = train_generator.get_embedding()
@@ -41,6 +37,7 @@ def train(config: Dict) -> None:
     # Get model
     model = get_model(config, embedding)
     model.to(device)
+    print(model)
     
     # Loss, optimizer and scheduler
     criterion = torch.nn.CrossEntropyLoss(reduction='mean')
@@ -129,25 +126,3 @@ def train(config: Dict) -> None:
 
     if config.learning.save_learning_curves:
         save_learning_curves(logging_path)
-
-
-
-
-# if __name__ == '__main__':
-    # train_list, val_list = train(save_weigth=False)
-    # print(np.shape(train_list),print(np.shape(val_list)))
-    # # Créez un graphe des losses d'entraînement et de validation avec les hyperparamètres
-    # plt.figure(figsize=(10, 5))
-    # plt.plot(range(1, PARAM.NUM_EPOCHS + 1), train_list, label='Train Loss', marker='o')
-    # plt.plot(range(1, PARAM.NUM_EPOCHS + 1), val_list, label='Validation Loss', marker='o')
-    # plt.xlabel('Epochs')
-    # plt.ylabel('Loss')
-    # plt.title('Train and Validation Losses')
-    # plt.legend()
-    # plt.grid(True)
-
-    # # Affichez les hyperparamètres sur le graphe
-    # hyperparameters_str = f"Learning Rate: {PARAM.LEARNING_RATE}, Batch Size: {PARAM.BATCH_SIZE}"
-    # plt.annotate(hyperparameters_str, xy=(0.7, 0.2), xycoords='axes fraction', fontsize=10, color='gray')
-    # # Affichez le graphe à l'écran
-    # plt.show()
