@@ -21,6 +21,7 @@ class Model():
         self.learn_embedding = learn_embedding
         self.embedding_dim = embedding_dim
         self.vocab_size = vocab_size
+        self.hidden_layer = hidden_layer
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """ pass x throught the model and return the output (without softmax) """
@@ -67,6 +68,40 @@ class Model():
     def copy_embedding(self, embedding: torch.Tensor) -> None:
         """ copy a matrix of embedding """
         self.E = embedding
+    
+    def __str__(self) -> str:
+        """ return model info """
+        output = '\n----------\nB - batch size \n'
+        output += 'K=' + str(self.context_length) + ' - context length \n'
+        output += 'V=' + str(self.vocab_size) + ' - Vocab size\n'
+        output += 'HL=' + str(self.hidden_layer) + ' - hidden layers \n'
+
+        if self.learn_embedding:
+            output += 'E=' + str(self.embedding_dim) + ' - Embedding dimension \n'
+            output += '---\n'
+            output += 'input shape: (B, K, V) \n'
+            output += 'Embedding -> output shape: (B, K, E)  -> param:' + str(self.vocab_size * self.embedding_dim)+' \n'
+            output += 'Stack     -> output shape: (B, K * E) -> param:0 \n'
+        
+        else:
+            output += '---\n'
+        
+        output += 'FFN1 relu -> output shape: (B, HL)    -> param:' + str((self.embedding_dim * self.context_length + 1) * self.hidden_layer) + '\n'
+        output += 'FF1       -> output shape: (B, V)     -> param:' + str((self.hidden_layer + 1) * self.vocab_size) + '\n'
+        output += '---\n'
+
+        output += 'number of parameters: ' + str(self.number_parameters())
+        output += '\n----------\n'
+        return output
+
+    def number_parameters(self) -> int:
+        """ get the number of parameters of the model """
+        params = 0
+        if self.learn_embedding:
+            params += self.vocab_size * self.embedding_dim
+        params += (self.embedding_dim * self.context_length + 1) * self.hidden_layer
+        params += (self.hidden_layer + 1) * self.vocab_size
+        return params
 
 
 def get_model(config: Dict, embedding: torch.Tensor=None):
