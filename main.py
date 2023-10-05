@@ -4,6 +4,7 @@ import argparse
 from easydict import EasyDict as edict
 
 from src.train import train
+from src.test import test
 from src.genere import genere
 
 
@@ -35,6 +36,10 @@ def main(options):
         config = find_config(options['path'])
         config = load_config(config)
         genere(config, options['path'])
+    elif options['mode'] == 'test':
+        config = find_config(options['path'])
+        config = load_config(config)
+        test(config, options['path'])
 
 
 
