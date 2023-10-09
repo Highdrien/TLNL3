@@ -1,4 +1,5 @@
 import os
+from numpy import exp
 from typing import Dict, List
 from datetime import datetime
 from easydict import EasyDict as edict
@@ -86,9 +87,12 @@ def train_step_logger(path: str,
     """
     with open(os.path.join(path, 'train_log.csv'), 'a') as file:
         line = str(epoch) + ',' + str(train_loss) + ',' + str(val_loss)
-        for i in range(len(train_metrics)):
+        for i in range(len(train_metrics) - 1):
             line += ',' + str(train_metrics[i])
             line += ',' + str(val_metrics[i])
+        # exp for the perplexity
+        line += ',' + str(exp(train_metrics[i]))
+        line += ',' + str(exp(val_metrics[i]))
         file.write(line + '\n')
     file.close()
 
@@ -98,5 +102,7 @@ def test_logger(path: str, metrics: List[str], values: List[float]) -> None:
     creates a file 'test_log.txt' in the path containing for each line: metrics[i]: values[i]
     """
     with open(os.path.join(path, 'test_log.txt'), 'a') as f:
-        for i in range(len(metrics)):
+        for i in range(len(metrics) - 1):
             f.write(metrics[i] + ': ' + str(values[i]) + '\n')
+        # exp for the perplexity
+        f.write(metrics[i] + ': ' + str(exp(values[i])) + '\n')

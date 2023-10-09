@@ -16,6 +16,7 @@ def top_k_precision(y_true: torch.Tensor, y_pred: torch.Tensor, k: int=5) -> flo
     top_k = torch.mean(correct_predictions.float())
     return top_k.item()
 
+
 def f_score(y_true: torch.Tensor, y_pred: torch.Tensor, beta: float = 1.0, threshold: float = 0.5) -> float:
     # Binarize the predictions using the given threshold
     y_pred_binary = (y_pred > threshold).float()
@@ -38,17 +39,22 @@ def f_score(y_true: torch.Tensor, y_pred: torch.Tensor, beta: float = 1.0, thres
     return average_f_score.item()
 
 
+def perplexite(y_true: torch.Tensor, y_pred: torch.Tensor) -> float:
+    argmax_indices = torch.argmax(y_true, dim=1)
+    selected_elements = y_pred[range(len(y_pred)), argmax_indices]
+    log_selected_elements = torch.log(selected_elements)
+    sum_log_selected_elements = torch.sum(log_selected_elements)
+    return sum_log_selected_elements.item()
+
+
 def compute_metrics(config: Dict, y_true: torch.Tensor, y_pred: torch.Tensor) -> np.ndarray[float]:
     metrics = []
-    if config.metrics.accuracy is not None:
-        metrics.append(accuracy(y_true, y_pred))
-    
-    if config.metrics.top_k is not None:
-        k = int(config.metrics.top_k)
-        metrics.append(top_k_precision(y_true, y_pred, k))
+    metrics.append(accuracy(y_true, y_pred))
 
-    if config.metrics.f_score is not None:
-        metrics.append(f_score(y_true, y_pred))
+    k = int(config.metrics.top_k)
+    metrics.append(top_k_precision(y_true, y_pred, k))
+
+    metrics.append(f_score(y_true, y_pred))
+    metrics.append(perplexite(y_true, y_pred))
         
-    
     return np.array(metrics)
