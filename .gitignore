@@ -5,3 +5,10 @@ experiment_*
 tp
 cm
 TP-3-Wav2Vec.py
+
+# report
+report.aux
+report.fdb_latexmk
+report.fls
+report.log
+report.synctex.gz

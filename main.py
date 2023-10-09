@@ -4,6 +4,7 @@ import argparse
 from easydict import EasyDict as edict
 
 from src.train import train
+from src.test import test
 from src.genere import genere
 
 
@@ -14,9 +15,9 @@ def load_config(path='configs/config.yaml'):
 
 def find_config(experiment_path):
     yaml_in_path = list(filter(lambda x: x[-5:] == '.yaml', os.listdir(experiment_path)))
-    
+
     if len(yaml_in_path) == 1:
-        return yaml_in_path[0]
+        return os.path.join(experiment_path, yaml_in_path[0])
 
     if len(yaml_in_path) == 0:
         print("ERROR: config.yaml wasn't found in", experiment_path)
@@ -32,8 +33,13 @@ def main(options):
         config = load_config(options['config_path'])
         train(config)
     elif options['mode'] in ['genere', 'generate']:
-        config = load_config(options['config_path'])
+        config = find_config(options['path'])
+        config = load_config(config)
         genere(config, options['path'])
+    elif options['mode'] == 'test':
+        config = find_config(options['path'])
+        config = load_config(config)
+        test(config, options['path'])
 
 
 

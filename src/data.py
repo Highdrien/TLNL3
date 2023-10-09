@@ -149,7 +149,7 @@ def text_to_indexes(text: Text_type,
     """ transforms str text into a word index list 
     if text is a word list, then new_list will be an index list
     if text is a phrase list (= word list then new_list will be an index list)
-    when a word in text is not in the dictionary, it is replaced by: '<unk>'
+    when a word in text is not in the dictionary, it is replaced by: dico['<unk>']
     """
     new_list = []
     if type(text[0]) == str:
@@ -158,7 +158,7 @@ def text_to_indexes(text: Text_type,
             if word in dico:
                 new_list.append(dico[word])
             else:
-                new_list.append('<unk>')
+                new_list.append(dico['<unk>'])
 
     else:
         # text is a list of sentences
@@ -168,7 +168,7 @@ def text_to_indexes(text: Text_type,
                 if word in dico:
                     new_sentence.append(dico[word])
                 else:
-                    new_sentence.append('<unk>')
+                    new_sentence.append(dico['<unk>'])
             new_list.append(new_sentence)
     
     return new_list
@@ -181,25 +181,3 @@ def get_dataloader(generator, config):
                             drop_last=config.learning.drop_last)
     return dataloader
 
-# if __name__ == '__main__':
-#     dataset = DataGenerator(mode='train', 
-#                             data_path='data', 
-#                             context_length=3, 
-#                             embedding_dim=100, 
-#                             line_by_line=True, 
-#                             learn_embedding=True)
-#     x, y = dataset.__getitem__(3)
-#     print('without DATALOADER')
-#     print(x.shape)
-#     print(y.shape)
-#     print()
-
-#     data_generator = DataLoader(dataset, 
-#                                 batch_size=10, 
-#                                 shuffle=True, 
-#                                 drop_last=True)
-#     print('with DATALOADER')
-#     for x, y in data_generator:
-#         print(x.shape)
-#         print(y.shape)
-#         exit()
