@@ -117,6 +117,11 @@ def train(config: Dict) -> None:
         train_metrics = train_metrics / n_train
         val_metrics = val_metrics / n_train
         train_step_logger(logging_path, epoch, train_loss, val_loss, train_metrics, val_metrics)
+
+        print('train_loss:', train_loss)
+        print('val_loss:', val_loss)
+        print('train acc:', train_metrics[0])
+        print('test acc:', val_metrics[0])
         
 
         if val_loss < best_val_loss:

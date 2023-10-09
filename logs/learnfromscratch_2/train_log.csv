@@ -1,0 +1,1 @@
+step,crossentropy,val crossentropy,accuracy,val accuracy,top_k,val top_k,f_score,val f_score

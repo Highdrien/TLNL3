@@ -1,0 +1,46 @@
+config_metadata: 'Saving time : 10/09/2023, 17:49:00'
+config_metadata: 'Saving time : 10/03/2023, 15:09:06'
+name: 'learnfromscratch'
+
+# data options
+data:
+    path: 'data'
+    context_length: 5
+    vocab_size: 2908
+    line_by_line: true
+
+# model options
+model:
+    embedding_dim: 100
+    hidden_layer: 1024
+    save_checkpoint: 'best'
+    embedding:
+        learn_embedding: true
+        learn_from_vect_to_vect: false
+        vect_to_vect_path: 'data\embeddings-word2vecofficial.train.unk5.txt'
+
+# learning options
+learning:
+    loss: 'crossentropy'
+    optimizer: 'adam'
+    learning_rate: 0.1
+    milesstone: [5]
+    gamma: 0.1
+    epochs: 10
+    batch_size: 128
+    save_learning_curves: true
+    shuffle: true
+    drop_last: false
+
+# metrics options
+metrics:
+    accuracy: true
+    top_k: 5
+    f_score: true
+
+# generate options
+generate:
+    folder: 'generate'
+    input_file: 'input.txt'
+    output_file: 'output_<experiment_name>.txt'
+    nb_words: 100

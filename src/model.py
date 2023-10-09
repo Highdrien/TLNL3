@@ -84,6 +84,7 @@ class Model():
             output += 'Stack     -> output shape: (B, K * E) -> param:0 \n'
         
         else:
+            output += 'input shape: (B, K * E) \n'
             output += '---\n'
         
         output += 'FFN1 relu -> output shape: (B, HL)    -> param:' + str((self.embedding_dim * self.context_length + 1) * self.hidden_layer) + '\n'

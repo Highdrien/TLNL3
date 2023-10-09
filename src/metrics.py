@@ -16,6 +16,27 @@ def top_k_precision(y_true: torch.Tensor, y_pred: torch.Tensor, k: int=5) -> flo
     top_k = torch.mean(correct_predictions.float())
     return top_k.item()
 
+def f_score(y_true: torch.Tensor, y_pred: torch.Tensor, beta: float = 1.0, threshold: float = 0.5) -> float:
+    # Binarize the predictions using the given threshold
+    y_pred_binary = (y_pred > threshold).float()
+
+    # Compute true positives, false positives, and false negatives
+    true_positives = torch.sum((y_true * y_pred_binary).float(), dim=0)
+    false_positives = torch.sum(((1 - y_true) * y_pred_binary).float(), dim=0)
+    false_negatives = torch.sum((y_true * (1 - y_pred_binary)).float(), dim=0)
+
+    # Compute precision, recall, and F-score for each class
+    precision = true_positives / (true_positives + false_positives + 1e-9)
+    recall = true_positives / (true_positives + false_negatives + 1e-9)
+
+    # Compute the F-score for each class
+    f_scores = (1 + beta**2) * (precision * recall) / ((beta**2 * precision) + recall + 1e-9)
+
+    # Take the average F-score across all classes (you can also weight them if needed)
+    average_f_score = torch.mean(f_scores)
+
+    return average_f_score.item()
+
 
 def compute_metrics(config: Dict, y_true: torch.Tensor, y_pred: torch.Tensor) -> np.ndarray[float]:
     metrics = []
@@ -25,5 +46,9 @@ def compute_metrics(config: Dict, y_true: torch.Tensor, y_pred: torch.Tensor) ->
     if config.metrics.top_k is not None:
         k = int(config.metrics.top_k)
         metrics.append(top_k_precision(y_true, y_pred, k))
+
+    if config.metrics.f_score is not None:
+        metrics.append(f_score(y_true, y_pred))
+        
     
     return np.array(metrics)
