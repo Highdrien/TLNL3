@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict
 import numpy as np
 import torch
 
@@ -42,9 +42,14 @@ def f_score(y_true: torch.Tensor, y_pred: torch.Tensor, beta: float = 1.0, thres
 def perplexite(y_true: torch.Tensor, y_pred: torch.Tensor) -> float:
     argmax_indices = torch.argmax(y_true, dim=1)
     selected_elements = y_pred[range(len(y_pred)), argmax_indices]
+
+    # Add smooth to avoid 0 before log
+    smooth = 1e-6
+    selected_elements = selected_elements + smooth
+
     log_selected_elements = torch.log(selected_elements)
-    sum_log_selected_elements = torch.sum(log_selected_elements)
-    return sum_log_selected_elements.item()
+    mean_log_selected_elements = torch.mean(log_selected_elements)
+    return mean_log_selected_elements.item()
 
 
 def compute_metrics(config: Dict, y_true: torch.Tensor, y_pred: torch.Tensor) -> np.ndarray[float]:
@@ -58,3 +63,16 @@ def compute_metrics(config: Dict, y_true: torch.Tensor, y_pred: torch.Tensor) ->
     metrics.append(perplexite(y_true, y_pred))
         
     return np.array(metrics)
+
+
+if __name__ == '__main__':
+    y_pred = torch.tensor([[0.1, 0.1, 0, 0.3, 0.1, 0.4],
+                           [0, 0.1, 0.5, 0.1, 0.3, 0]])
+    y_true = torch.tensor([[0, 0, 0, 1, 0, 0],
+                           [0, 0, 1, 0, 0, 0]])
+    print(y_pred.shape, y_true.shape)
+
+    print('acc:', accuracy(y_true, y_pred))
+    print('top_k_precision:', top_k_precision(y_true, y_pred))
+    print('perplexite:', np.exp(perplexite(y_true, y_pred)))
+    print('f1_score:', f_score(y_true, y_pred))
