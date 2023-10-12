@@ -49,7 +49,7 @@ def perplexite(y_true: torch.Tensor, y_pred: torch.Tensor) -> float:
 
     log_selected_elements = torch.log(selected_elements)
     mean_log_selected_elements = torch.mean(log_selected_elements)
-    return mean_log_selected_elements.item()
+    return - mean_log_selected_elements.item()
 
 
 def compute_metrics(config: Dict, y_true: torch.Tensor, y_pred: torch.Tensor) -> np.ndarray[float]:
