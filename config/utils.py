@@ -105,4 +105,4 @@ def test_logger(path: str, metrics: List[str], values: List[float]) -> None:
         for i in range(len(metrics) - 1):
             f.write(metrics[i] + ': ' + str(values[i]) + '\n')
         # exp for the perplexity
-        f.write(metrics[i] + ': ' + str(exp(values[i])) + '\n')
+        f.write(metrics[-1] + ': ' + str(exp(values[-1])) + '\n')
