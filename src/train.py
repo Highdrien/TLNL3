@@ -6,7 +6,7 @@ import numpy as np
 
 from src.data import DataGenerator, get_dataloader
 from src.model import get_model
-# import parameters as PARAM 
+from src.loss import PerplexiteLoss
 from src.metrics import compute_metrics
 from config.utils import train_logger, train_step_logger
 from utils.plot_learning_curves import save_learning_curves
@@ -40,7 +40,13 @@ def train(config: Dict) -> None:
     print(model)
     
     # Loss, optimizer and scheduler
-    criterion = torch.nn.CrossEntropyLoss(reduction='mean')
+    if config.learning.loss.lower() in ['crossentropy', 'ce', 'cross entropy']:
+        criterion = torch.nn.CrossEntropyLoss(reduction='mean')
+        loss_name = 'crossentropy'
+    else:
+        criterion = PerplexiteLoss(smooth=1e-6)
+        loss_name = 'perplexity'
+    print('loss:', loss_name)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning.learning_rate)
     scheduler = MultiStepLR(optimizer, milestones=config.learning.milesstone, gamma=config.learning.gamma)
 
@@ -68,10 +74,15 @@ def train(config: Dict) -> None:
 
             y_pred = model.forward(x)
 
+            if loss_name != 'crossentropy':
+                y_pred = torch.nn.functional.softmax(y_pred, dim=1)
+                
             loss = criterion(y_pred, y_true)
 
+            if loss_name == 'crossentropy':
+                y_pred = torch.nn.functional.softmax(y_pred, dim=1)
+
             train_loss += loss.item()
-            y_pred = torch.nn.functional.softmax(y_pred, dim=1)  
             train_metrics += compute_metrics(config, y_true, y_pred)
 
             loss.backward()
@@ -98,10 +109,15 @@ def train(config: Dict) -> None:
 
                 y_pred = model.forward(x)
 
+                if loss_name != 'crossentropy':
+                    y_pred = torch.nn.functional.softmax(y_pred, dim=1)
+                    
                 loss = criterion(y_pred, y_true)
+
+                if loss_name == 'crossentropy':
+                    y_pred = torch.nn.functional.softmax(y_pred, dim=1)
                 
                 val_loss += loss.item()
-                y_pred = torch.nn.functional.softmax(y_pred, dim=1)  
                 val_metrics += compute_metrics(config, y_true, y_pred)
 
                 val_range.set_description("VAL -> epoch: %4d || loss: %4.4f" % (epoch, loss.item()))
