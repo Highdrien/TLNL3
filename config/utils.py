@@ -91,8 +91,8 @@ def train_step_logger(path: str,
             line += ',' + str(train_metrics[i])
             line += ',' + str(val_metrics[i])
         # exp for the perplexity
-        line += ',' + str(exp(train_metrics[i]))
-        line += ',' + str(exp(val_metrics[i]))
+        line += ',' + str(exp(train_metrics[-1]))
+        line += ',' + str(exp(val_metrics[-1]))
         file.write(line + '\n')
     file.close()
 

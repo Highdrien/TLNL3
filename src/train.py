@@ -131,16 +131,16 @@ def train(config: Dict) -> None:
         train_loss = train_loss / n_train
         val_loss = val_loss / n_val
         train_metrics = train_metrics / n_train
-        val_metrics = val_metrics / n_train
+        val_metrics = val_metrics / n_val
         train_step_logger(logging_path, epoch, train_loss, val_loss, train_metrics, val_metrics)
 
         print('train_loss:', train_loss)
         print('val_loss:', val_loss)
-        print('train acc:', train_metrics[0])
-        print('test acc:', val_metrics[0])
-        
+        for i in range(len(metrics_name) - 1):
+            print(metrics_name[i], ' -> train:', train_metrics[i], '  val:', val_metrics[i])
+        print(metrics_name[-1], ' -> train:', np.exp(train_metrics[-1]), '  val:', np.exp(val_metrics[-1]))
 
-        if val_loss < best_val_loss:
+        if config.model.save_checkpoint != False and val_loss < best_val_loss:
             print('save model weights')
             model.save(logging_path)
             best_val_loss = val_loss
