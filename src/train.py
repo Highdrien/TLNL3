@@ -3,6 +3,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 from tqdm import tqdm
 from typing import Dict
 import numpy as np
+import time
 
 from src.data import DataGenerator, get_dataloader
 from src.model import get_model
@@ -13,6 +14,7 @@ from utils.plot_learning_curves import save_learning_curves
 
 
 def train(config: Dict) -> None:
+    start_time = time.time()
 
     # Use gpu or cpu
     if torch.cuda.is_available():
@@ -144,6 +146,9 @@ def train(config: Dict) -> None:
             print('save model weights')
             model.save(logging_path)
             best_val_loss = val_loss
+
+    stop_time = time.time()
+    print('training time:', stop_time - start_time, 'secondes for ', config.learning.epochs, 'epochs')
 
     if config.learning.save_learning_curves:
         save_learning_curves(logging_path)

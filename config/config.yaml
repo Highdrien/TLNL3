@@ -1,4 +1,4 @@
-name: learnfromword2vect
+name: learnfromscratch
 
 # data options
 data:
@@ -13,7 +13,7 @@ model:
     hidden_layer: 256
     save_checkpoint: 'best'
     embedding:
-        learn_embedding: true
+        learn_embedding: false
         learn_from_vect_to_vect: true
         vect_to_vect_path: 'data\embeddings-word2vecofficial.train.unk5.txt'
 
