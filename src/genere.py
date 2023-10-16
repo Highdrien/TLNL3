@@ -77,10 +77,10 @@ def genere(config: Dict, logging_path: str) -> List[int]:
                 context = context.unsqueeze(0)
             else:  
                 new_word = F.one_hot(idx, num_classes=vocab_size).unsqueeze(0).unsqueeze(0)
-                context = torch.cat((context[:, -4:, :], new_word), dim=1)
+                context = torch.cat((context[:, -(context_length - 1):, :], new_word), dim=1)
 
     output = input + output[len(input):]
-    print('output:', output)
+    print(f'{output = }')
     write_output(generate_path=config.generate.folder,
                  output=output,
                  output_file=config.generate.output_file,
