@@ -1,4 +1,4 @@
-name: learnfromscratch
+name: learnfromword2vect
 
 # data options
 data:
@@ -14,7 +14,7 @@ model:
     save_checkpoint: 'best'
     embedding:
         learn_embedding: true
-        learn_from_vect_to_vect: false
+        learn_from_vect_to_vect: true
         vect_to_vect_path: 'data\embeddings-word2vecofficial.train.unk5.txt'
 
 # learning options
@@ -22,7 +22,7 @@ learning:
     loss: crossentropy
     optimizer: 'adam'
     learning_rate: 0.01
-    milesstone: [5]
+    milesstone: [5, 15]
     gamma: 0.1
     epochs: 30
     batch_size: 256
