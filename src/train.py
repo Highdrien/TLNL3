@@ -139,7 +139,7 @@ def train(config: Dict) -> None:
         train_metrics = train_metrics / n_train
         val_metrics = val_metrics / n_val
         
-        train_step_logger(logging_path=logging_path, 
+        train_step_logger(path=logging_path, 
                           epoch=epoch, 
                           train_loss=train_loss, 
                           val_loss=val_loss, 
