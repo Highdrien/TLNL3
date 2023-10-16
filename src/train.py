@@ -1,7 +1,7 @@
 import torch
 from torch.optim.lr_scheduler import MultiStepLR
 from tqdm import tqdm
-from typing import Dict
+from typing import Dict, List
 import numpy as np
 import time
 
@@ -21,34 +21,37 @@ def train(config: Dict) -> None:
         device = torch.device("cuda")
     else:
         device = torch.device("cpu")
-    print('device:', device)
+    print(f'device: {device}')
 
     # Get data
     train_generator = DataGenerator(config=config, mode='train')
     val_generator = DataGenerator(config=config, mode='val')
+
+    # Get model
+    model = get_model(config)
+    model.to(device)
+    print(model)
     
-    embedding = None
+    # Get embedding from word2vect
     if config.model.embedding.learn_embedding and config.model.embedding.learn_from_vect_to_vect:
-        embedding = train_generator.get_embedding()
+        print(f'get emebedding from {config.model.embedding.vect_to_vect_path}')
+        model.copy_embedding(train_generator.get_embedding())
 
     # Dataloader
     train_generator = get_dataloader(train_generator, config)
     val_generator = get_dataloader(val_generator, config)
     n_train, n_val = len(train_generator), len(val_generator)
-
-    # Get model
-    model = get_model(config, embedding)
-    model.to(device)
-    print(model)
     
-    # Loss, optimizer and scheduler
+    # Loss
     if config.learning.loss.lower() in ['crossentropy', 'ce', 'cross entropy']:
         criterion = torch.nn.CrossEntropyLoss(reduction='mean')
         loss_name = 'crossentropy'
     else:
         criterion = PerplexiteLoss(smooth=1e-6)
         loss_name = 'perplexity'
-    print('loss:', loss_name)
+    print(f'loss: {loss_name}')
+
+    # Optimizer and Scheduler
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning.learning_rate)
     scheduler = MultiStepLR(optimizer, milestones=config.learning.milesstone, gamma=config.learning.gamma)
 
@@ -57,13 +60,14 @@ def train(config: Dict) -> None:
 
     # Metrics
     metrics_name = list(filter(lambda x: config.metrics[x] is not None, config.metrics))
+    assert metrics_name[-1] == 'preplexite', 'last metrics must be perplexite'
 
     ###############################################################
     # Start Training                                              #
     ###############################################################
 
     for epoch in range(1, config.learning.epochs + 1):
-        print('epoch:', epoch)
+        print(f'epoch: {epoch}')
         train_loss = 0
         train_range = tqdm(train_generator)
         train_metrics = np.zeros(len(metrics_name))
@@ -91,7 +95,7 @@ def train(config: Dict) -> None:
             optimizer.step()
             optimizer.zero_grad()
 
-            train_range.set_description("TRAIN -> epoch: %4d || loss: %4.4f" % (epoch, loss.item()))
+            train_range.set_description(f"TRAIN -> epoch: {epoch} || loss: {loss.item():.4f}")
             train_range.refresh()
 
 
@@ -122,7 +126,7 @@ def train(config: Dict) -> None:
                 val_loss += loss.item()
                 val_metrics += compute_metrics(config, y_true, y_pred)
 
-                val_range.set_description("VAL -> epoch: %4d || loss: %4.4f" % (epoch, loss.item()))
+                val_range.set_description(f"VAL -> epoch: {epoch} || loss: {loss.item():.4f}")
                 val_range.refresh()
         
         scheduler.step()
@@ -134,13 +138,19 @@ def train(config: Dict) -> None:
         val_loss = val_loss / n_val
         train_metrics = train_metrics / n_train
         val_metrics = val_metrics / n_val
-        train_step_logger(logging_path, epoch, train_loss, val_loss, train_metrics, val_metrics)
+        
+        train_step_logger(logging_path=logging_path, 
+                          epoch=epoch, 
+                          train_loss=train_loss, 
+                          val_loss=val_loss, 
+                          train_metrics=train_metrics, 
+                          val_metrics=val_metrics)
 
-        print('train_loss:', train_loss)
-        print('val_loss:', val_loss)
-        for i in range(len(metrics_name) - 1):
-            print(metrics_name[i], ' -> train:', train_metrics[i], '  val:', val_metrics[i])
-        print(metrics_name[-1], ' -> train:', np.exp(train_metrics[-1]), '  val:', np.exp(val_metrics[-1]))
+        print_loss_and_metrics(train_loss=train_loss,
+                               val_loss=val_loss,
+                               metrics_name=metrics_name,
+                               train_metrics=train_metrics,
+                               val_metrics=val_metrics)        
 
         if config.model.save_checkpoint != False and val_loss < best_val_loss:
             print('save model weights')
@@ -148,7 +158,20 @@ def train(config: Dict) -> None:
             best_val_loss = val_loss
 
     stop_time = time.time()
-    print('training time:', stop_time - start_time, 'secondes for ', config.learning.epochs, 'epochs')
+    print(f"training time: {stop_time - start_time}secondes for {config.learning.epochs} epochs")
 
     if config.learning.save_learning_curves:
         save_learning_curves(logging_path)
+
+
+def print_loss_and_metrics(train_loss: float,
+                           val_loss: float,
+                           metrics_name: List[str],
+                           train_metrics: List[float],
+                           val_metrics: List[float]) -> None:
+    """ print loss and metrics for train and validation """
+    print(f"{train_loss = }")
+    print(f"{val_loss = }")
+    for i in range(len(metrics_name) - 1):
+        print(f"{metrics_name[i]} -> train: {train_metrics[i]:.3f}   val:{val_metrics[i]:.3f}")
+    print(f"{metrics_name[-1]} -> train: {np.exp(train_metrics[-1]):.2e}   val:{np.exp(val_metrics[-1]):.2e}")

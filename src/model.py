@@ -71,29 +71,38 @@ class Model():
     
     def __str__(self) -> str:
         """ return model info """
-        output = '\n----------\nB - batch size \n'
-        output += 'K=' + str(self.context_length) + ' - context length \n'
-        output += 'V=' + str(self.vocab_size) + ' - Vocab size\n'
-        output += 'HL=' + str(self.hidden_layer) + ' - hidden layers \n'
+        output = (
+            f'\n----------\nB \t\t- batch size \n'
+            f'K = {self.context_length} \t\t- context length \n'
+            f'V = {self.vocab_size} \t- Vocab size\n'
+            f'HL = {self.hidden_layer} \t- hidden layers \n'
+        )
 
         if self.learn_embedding:
-            output += 'E=' + str(self.embedding_dim) + ' - Embedding dimension \n'
-            output += '---\n'
-            output += 'input shape: (B, K, V) \n'
-            output += 'Embedding -> output shape: (B, K, E)  -> param:' + str(self.vocab_size * self.embedding_dim)+' \n'
-            output += 'Stack     -> output shape: (B, K * E) -> param:0 \n'
-        
+            output += (
+                f'E = {self.embedding_dim} \t- Embedding dimension \n'
+                '\n'
+                'input shape: (B, K, V) \n'
+                f'Embedding \t-> output shape: (B, K, {self.embedding_dim})\t-> param:{self.vocab_size * self.embedding_dim} \n'
+                'Stack     \t-> output shape: (B, K * E)\t-> param:0 \n'
+            )
         else:
-            output += 'input shape: (B, K * E) \n'
-            output += '---\n'
-        
-        output += 'FFN1 relu -> output shape: (B, HL)    -> param:' + str((self.embedding_dim * self.context_length + 1) * self.hidden_layer) + '\n'
-        output += 'FF1       -> output shape: (B, V)     -> param:' + str((self.hidden_layer + 1) * self.vocab_size) + '\n'
-        output += '---\n'
+            output += (
+                'input shape: (B, K * E) \n'
+                '---\n'
+            )
 
-        output += 'number of parameters: ' + str(self.number_parameters())
-        output += '\n----------\n'
+        output += (
+            f'FFN1 relu \t-> output shape: (B, {self.hidden_layer})\t-> param:{(self.embedding_dim * self.context_length + 1) * self.hidden_layer}\n'
+            f'FF1       \t-> output shape: (B, {self.vocab_size})\t-> param:{(self.hidden_layer + 1) * self.vocab_size}\n'
+            f'final output shape: (B, {self.vocab_size})\n'
+            '\n'
+            f'total of parameters: {self.number_parameters()}\n'
+            '----------\n'
+        )
+
         return output
+
 
     def number_parameters(self) -> int:
         """ get the number of parameters of the model """
@@ -105,18 +114,11 @@ class Model():
         return params
 
 
-def get_model(config: Dict, embedding: torch.Tensor=None):
-    """ get the model according the configuration 
-        if the model have to learn his own embedding from vect2vect, the model will copy the embedding"""
+def get_model(config: Dict) -> Model:
+    """ get the model according the configuration """
     model = Model(embedding_dim=config.model.embedding_dim, 
                   context_length=config.data.context_length, 
                   hidden_layer=config.model.hidden_layer, 
                   vocab_size=config.data.vocab_size,
-                  learn_embedding=config.model.embedding.learn_embedding  )
-    
-    if embedding is not None:
-        if config.model.embedding.learn_embedding and config.model.embedding.learn_from_vect_to_vect:
-            model.copy_embedding(embedding)
-            del embedding
-
+                  learn_embedding=config.model.embedding.learn_embedding)
     return model

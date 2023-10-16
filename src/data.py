@@ -54,7 +54,7 @@ class DataGenerator(Dataset):
         """
 
         assert mode in ['train', 'val', 'test'], "mode must be 'train', 'val', or 'test'"
-        print('mode:', mode)
+        print(f'{mode = }')
         file = os.path.join(config.data.path, 'Le_comte_de_Monte_Cristo.' + mode + '.txt')
         
         self.embedding_path = config.model.embedding.vect_to_vect_path
