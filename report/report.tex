@@ -27,17 +27,17 @@
 
 \section{Introduction}
 
-Le but de ce projet est de coder un modèle de langage basé sur un réseau de neurone multicouche. Ce modèle de langage devra permettre 
-de prédire le mot suivant à partir d'un contexte, qui est un ensemble de mots précédent le mot à prédire. 
+Le but de ce projet est de coder un modèle de langage basé sur un réseau de neurones multicouche. Ce modèle de langage devra permettre 
+de prédire le mot suivant à partir d'un contexte, qui est un ensemble de mots précédant le mot à prédire. 
 
-Pour faire cela, on utilise des embeddings. Le principe est d'associer à chaque mot un vecteur dans un espace latent de tels sorte que 
+Pour faire cela, on utilise des embeddings. Le principe est d'associer à chaque mot un vecteur dans un espace latent de telle sorte que 
 deux mots similaires (en termes de sens) ont des vecteurs proches (avec une distance euclidienne), et deux mots totalement différents 
 sont très loin. Cela permet de projeter les mots dans un espace latent pour pouvoir travailler plus efficacement sur ces mots. 
-On note $e$ la dimension de cette espace.
+On note $e$ la dimension de cet espace.
 
-Dans un premier temps, on utilisera les embeddings des mots appris par l'algorithme Word2Vect~\cite{mikolov2013efficient} 
+Dans un premier temps, on utilisera les embeddings des mots appris par l'algorithme Word2Vec~\cite{mikolov2013efficient} 
 (modèle nommé \textit{FROZEN}). Par la suite, nous tenterons d'améliorer le modèle en lui permettant d'apprendre ses propres 
-embeddings à partir d'embeddings aléatoire (modèle nommé \textit{SCRATCH}), ou directement les embeddings appris de Word2Vect 
+embeddings à partir d'embeddings aléatoires (modèle nommé \textit{SCRATCH}), ou directement les embeddings appris de Word2Vec 
 (modèle nommé \textit{ADAPT}).
 
 
@@ -45,8 +45,8 @@ embeddings à partir d'embeddings aléatoire (modèle nommé \textit{SCRATCH}), 
 
 Nous avons implémenté le perceptron multicouche comme modèle de langage de base. Celui-ci est composé d'une couche d'entrée qui 
 prenant un vecteur de dimension $k \times e$ représentant les embeddings de $k$ mots concaténés. Une couche de neurone cachée dont 
-nous avons choisi de faire varier le nombre de neurone noté $h$, suivit d'une fonction ReLU~\cite{DBLP:journals/corr/abs-1803-08375}. 
-Puis une deuxième couche de neurones suivit d'un softmax retournant un vecteur de taille $V$, le nombre de mots appris. 
+nous avons choisi de faire varier le nombre de neurones noté $h$, suivie d'une fonction ReLU~\cite{DBLP:journals/corr/abs-1803-08375}. 
+Puis une deuxième couche de neurones suivie d'un softmax retournant un vecteur de taille $V$, le nombre de mots appris. 
 La Figure~\ref{fig:model1} représente ce modèle.
 
 \subsection{Formalisme mathématiques}
@@ -55,7 +55,7 @@ $(b_1,b_2) \in \mathbb{R}^{h} \times \mathbb{R}^{V}$ les biais, $X \in \mathbb{R
 l'équation~\eqref{eq:model1} donne la fonction de sortie $F(X) \in \mathbb{R}^{V}$ du modèle. 
 
 
-Après plusieurs essais, nous avons choisie de prendre: $k=3$, $e=100$, $h_1=256$. Et dans nos données d'entraînement, on avait un 
+Après plusieurs essais, nous avons choisi de prendre: $k=3$, $e=100$, $h_1=256$. Et dans nos données d'entraînement, on avait un 
 vocabulaire contenant: $V=2908$ mots distincts. Avec ces hyperparamètres, nous avons dans ce modèle $824412$ paramètres apprenables.
 % temps d'apprentisage pour 10 epochs: 13min
 
@@ -70,7 +70,7 @@ vocabulaire contenant: $V=2908$ mots distincts. Avec ces hyperparamètres, nous 
     \label{fig:model1}
 \end{figure}
 
-Pour entraîner ce modèle, nous avons comparer notre sortie au mot à prédire dans le format One-hot encoding
+Pour entraîner ce modèle, nous avons comparé notre sortie au mot à prédire dans le format One-hot encoding
 \footnote{Le format One-hot encoding est un encodage des indices en un vecteur d'une taille du nombre d'indice possible tel que 
 ce vecteur possède des 0 partout sauf à l'indice en question qui possède un 1.}, et nous appliquons le calcule de la fonction de 
 coût: cross-entropy. 
@@ -89,8 +89,8 @@ Sur la Figure~\ref{subfig:result model 1}, on voit les courbes d'apprentissage. 
 d'entraînement sont en bleue, sur les données de validations sont en orange.
 
 On constate d'après les courbes que le modèle apprend très vite (les courbes atteignent un plateau en quasiment 2 epochs). Ceci 
-est du au fait que les embeddings du modèle sont déjà appris. On observe par ailleurs que le modèle n'overfit pas car il n'y a pas 
-de décalage important entres les valeurs de métrique d'entraînement et de validation à la fin de l'entraînement. Le modèle se 
+est dû au fait que les embeddings du modèle sont déjà appris. On observe par ailleurs que le modèle n'overfit pas car il n'y a pas 
+de décalage important entre les valeurs de métrique d'entraînement et de validation à la fin de l'entraînement. Le modèle se 
 stabilise à la fin de l'entraînement avec les métriques de validation présenté dans la Table~\ref{tab:metriques model1}.
 
 
@@ -146,10 +146,10 @@ donc étendre jusqu'à eux l'algorithme de rétro-propagation du gradient.
 
 \subsection{Mise en \oe uvre}
 
-Il a fallut adapter un peu notre code car avant pour avoir l'embedding d'un mot $i$, on utilisé $E[i]$, où 
+Il a fallu adapter un peu notre code car avant pour avoir l'embedding d'un mot $i$, on utilisé $E[i]$, où 
 $E \in \mathcal{M}_{V, e}(\mathbb{R})$ est la matrice d'embedding. Cependant, cette opération n'est pas dérivable, donc il a 
 fallut transformer le mot $i$ en un vecteur $x \in \mathbb{R}^V$ one-hot, et faire $x \times E$ pour obtenir l'embedding du 
-mots $i$, qui cette fois ci, est une opération dérivable. 
+mots $i$, qui cette fois-ci, est une opération dérivable. 
 Une fois cette adaptation faite, on a rajouté cette opération dans notre modèle et nous obtenons donc un nouveau modèle illustré 
 par la Figure~\ref{fig:model2}, et donné par l'équation~\eqref{eq:model2}.
 
@@ -174,7 +174,7 @@ On remarque, sur la Figure~\ref{subfig:result model 2}, tout d'abord que l'appre
 long car l'ensemble (modèle plus matrice d'embedding) possède un plus grand nombre de paramètres ($1115212$ contre $824412$ pour le 
 modèle \textit{FROZEN}) qui nécessitent donc plus d'epochs que \textit{FROZEN} pour être actualisés.
 
-On obtient en terme de métriques de validation, des résultats semblables au modèle précèdent. Cela s'explique par le fait que, bien 
+On obtient en termes de métriques de validation, des résultats semblables au modèle précédent. Cela s'explique par le fait que, bien 
 qu'on apprenne par rétro-propagation les embeddings et que donc on s'attend à une meilleur qualité de résultat, cela est compensé par 
 le fait que l'apprentissage se fait à partir de 0 et on commence donc l'apprentissage avec des résultats aléatoires.
 
@@ -223,30 +223,30 @@ Table~\ref{tab:metriques model2}.
 \end{table}
 
 
-\section{Apprentissage des embeddings à partir de l'algorithme Word2Vect: modèle \textit{ADAPT}.}
+\section{Apprentissage des embeddings à partir de l'algorithme Word2Vec: modèle \textit{ADAPT}.}
 
 \subsection{Description}
 
 Dans cette partie, nous allons tenter d'améliorer la performance et surtout la vitesse d'apprentissage. Au lieu,
 d'initialiser la matrice d'embedding aléatoirement comme dans la partie précédente, nous allons initialiser cette 
-matrice à partir des embeddings déjà appris avec l'algorithme Word2Vect. En procédant comme cela, nous allons pouvoir
+matrice à partir des embeddings déjà appris avec l'algorithme Word2Vec. En procédant comme cela, nous allons pouvoir
 continuer d'apprendre ces embeddings pour coller au mieux à notre tâche de prédiction.
 
 \subsection{Mise en \oe uvre}
 
-La mise en \oe uvre de cette partie n'a pas été très compliqué à implémenter car le modèle est le même que celui de 
+La mise en \oe uvre de cette partie n'a pas été très compliquée à implémenter car le modèle est le même que celui de 
 \textit{SCRATCH}, voir Figure~\ref{fig:model2}. Il nous a donc suffit de récupérer la matrice d'embedding apprise et de 
 la copier dans le modèle lors de son initialisation.
 
 \subsection{Résultats}
 
 On constate immédiatement, avec la Figure~\ref{subfig:result model 3}, que l'apprentissage est bien plus rapide dans le cas où on 
-initialise les embeddings avec Word2Vect par rapport au cas où on les initialise aléatoirement. Cela s'explique par le fait que 
+initialise les embeddings avec Word2Vec par rapport au cas où on les initialise aléatoirement. Cela s'explique par le fait que 
 contrairement au modèle précédent, le modèle a déjà des embeddings valides aux début de l'apprentissage qu'il peut par la suite 
 perfectionner.
 
-Notre hypothèse était que initialiser les embeddings avec Word2Vect puis les modifier au cours de l'apprentissage permettrait 
-d'obtenir de meilleurs performances que celles du modèle où les embeddings sont gelés pendant l'apprentissage. 
+Notre hypothèse était que initialiser les embeddings avec Word2Vec puis les modifier au cours de l'apprentissage permettrait 
+d'obtenir de meilleures performances que celles du modèle où les embeddings sont gelés pendant l'apprentissage. 
 
 
 \begin{figure}[ht]
@@ -281,12 +281,12 @@ d'obtenir de meilleurs performances que celles du modèle où les embeddings son
 
 Après avoir entraîné ces trois modèles et pris les poids qui minimise la loss de validation, nous avons ensuite passé ces modèles dans 
 une base de données de teste\footnote{La base de données est bien sûr disjointe de celles de l'entraînement et de validation, mais toujours
-tirée du corpus du \textit{Compte de Monté-Cristo} d'Alexendre Dumas.}. La Table~\ref{tab:test} présente les résultats des modèles sur 
-différentes métriques. On voir que les 3 modèles ont une accuracy et une métrique top~$k$ similaires. Cependant, le modèle \textit{SCRATCH} 
+tirée du corpus du \textit{Comte de Monté-Cristo} d'Alexandre  Dumas.}. La Table~\ref{tab:test} présente les résultats des modèles sur 
+différentes métriques. On voit que les 3 modèles ont une accuracy et une métrique top~$k$ similaires. Cependant, le modèle \textit{SCRATCH} 
 est très mauvais sur la Cross Entropy et la perplexité (par rapport aux autres modèles). Il est aussi étonnant de constater que le modèle
-\textit{FROZEN} et \textit{ADAPT} ont des résultats similaires. Cela sigifie que les embeddings appris par Word2Vect correspondes à cette tâche.
-Dans ce cas, les embeddings obtenues avec Word2Vect ont été appris sur le même corpus que l'entraînement des modèles. Nous pensons que si 
-les embeddings aurait été appris sur un autre corpus, le modèle \textit{ADAPT} aurai pu se différencier par rapport au modèle \textit{FROZEN}.
+\textit{FROZEN} et \textit{ADAPT} ont des résultats similaires. Cela signifie que les embeddings appris par Word2Vec correspondent à cette tâche.
+Dans ce cas, les embeddings obtenues avec Word2Vec ont été appris sur le même corpus que l'entraînement des modèles. Nous pensons que si 
+les embeddings avaient été appris sur un autre corpus, le modèle \textit{ADAPT} aurait  pu se différencier par rapport au modèle \textit{FROZEN}.
 
 
 \begin{table}[ht]
@@ -306,10 +306,10 @@ les embeddings aurait été appris sur un autre corpus, le modèle \textit{ADAPT
 
 \subsection{Temps d'entraînement}
 
-Il peut aussi être intéresant de regarder le temps d'entraînement des différents modèles, voir Table~\ref{tab:times}. Ces modèles ont été
-entraîner sur un Windows 11 possèdant un intel i7 de 12ème génération et une carte graphique: Nvidia RTX 3050 modèle ordinateur portable.
+Il peut aussi être intéressant de regarder le temps d'entraînement des différents modèles, voir Table~\ref{tab:times}. Ces modèles ont été
+entraînés sur un Windows 11 avec un intel i7 de 12ème génération et une carte graphique: Nvidia RTX 3050 modèle ordinateur portable.
 On remarque sans surprise que l'entraînement le plus rapide est celui de \textit{FROZEN} car c'est le modèle qui a le moins de paramètres.
-Il est très intéresant de voir que le modèle \textit{ADAPT} s'entraine beaucoup plus vite que le modèle \textit{SCRATCH}, alors que le
+Il est très intéressant de voir que le modèle \textit{ADAPT} s'entraîne beaucoup plus vite que le modèle \textit{SCRATCH}, alors que le
 nombre de paramètres est le même. Notre hypothèse est que: \textit{mettre notre hypothèse}.
 En comparant les résultats des modèles et leurs temps d'entraînement, on peut voir qu'il n'est pas rentable d'entraîner un modèle comme
 celui de \textit{SCRATCH}, si l'on a déjà une partie pré-entraîné car cela prend beaucoup de temps et que l'on des performances 
