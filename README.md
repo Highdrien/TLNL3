@@ -1,14 +1,14 @@
 # Projet TLNL 3:
 
+The aim of this project is to program a neural language model using a multi-layer perceptron. This language model takes as input the plunges of $k$ consecutive words and outputs a probability distribution probability distribution over the entire vocabulary.
 
-- [Projet TLNL 3:](#projet-tlnl-3)
-- [Run the code](#run-the-code)
-  - [Mode: train](#mode-train)
-  - [Mode: generate](#mode-generate)
-- [Results](#results)
-  - [Learn from vect2vect embedding](#learn-from-vect2vect-embedding)
-  - [Learn from scratch](#learn-from-scratch)
+# Requierements
 
+To run the code you need python (We use python 3.9.13).
+You can run the following code to install all packages in the correct versions:
+```bach
+pip install -r requirements.txt
+```
 
 # Run the code
 
@@ -16,10 +16,18 @@ To run the program, simply execute the `main.py` file. However, there are severa
 
 ## Mode: train
 
-To do this, you need to choose a `.yaml` configuration file to set all the training parameters. By default, the code will use the `config/configs.yaml` file. The code will create a folder: 'experiment' in logs to store all the training information, such as a copy of the configuration used, the loss and metrics values at each epoch, the learning curves and the model weights.
+To do this, you need to choose a `.yaml` configuration file to set all the training parameters. By default, the code will use the `config/configs.yaml` file. The code will create a folder: 'name' in logs to store all the training information, such as a copy of the configuration used, the loss and metrics values at each epoch, the learning curves and the model weights.
 To run a training session, enter the following command:
 ```bash
-python main.py --mode train --config_path <path to your configuration system> 
+python main.py --mode train
+```
+If you want use a specific configuration, you can add `--config <path to the configuration>`
+
+## Mode: test
+
+To run a test, you have to choose the your experiement, and run this line:
+```bash
+python main.py --mode test --path <path to the expiement>
 ```
 
 ## Mode: generate
@@ -28,22 +36,3 @@ If you want generate a text from a input, you can write your input in `generate\
 python main.py --mode generate --path <path to your experiement>
 ```
 Then, the model will generate a text and save it in `generate\output_<name of experiement>`.
-
-# Results
-
-## Learn from vect2vect embedding
-
-`logs\vect2vect_0`: use embedding which was created with vect2vect. training with 10 epochs
-
-<p align="center"><img src=logs/vect2vect_0/crossentropy.png><p>
-<p align="center"><img src=logs/vect2vect_0/accuracy.png><p>
-<p align="center"><img src=logs/vect2vect_0/top_k.png><p>
-
-## Learn from scratch
-
-`logs\learnfromscratch_0`: create a random embedding matrix and learn the embedding to the problem.
-training with 10 epochs
-
-<p align="center"><img src=logs/learnfromscratch_0/crossentropy.png><p>
-<p align="center"><img src=logs/learnfromscratch_0/accuracy.png><p>
-<p align="center"><img src=logs/learnfromscratch_0/top_k.png><p>
