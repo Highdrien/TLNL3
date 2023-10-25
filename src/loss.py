@@ -5,10 +5,15 @@ from typing import Optional
 
 
 class PerplexiteLoss(nn.Module):
-    def __init__(self, smooth: Optional[float]=1e-6) -> None:
+    def __init__(self, 
+                 smooth: Optional[float]=1e-6
+                 ) -> None:
         self.smooth = smooth
 
-    def __call__(self, y_pred: torch.Tensor, y_true: torch.Tensor) -> torch.Tensor:
+    def __call__(self, 
+                 y_pred: torch.Tensor, 
+                 y_true: torch.Tensor
+                 ) -> torch.Tensor:
         """ compute the perplexity without exp at the end 
 
             y_pred and y_pred must have a shape of (Batch size, Vocab size)

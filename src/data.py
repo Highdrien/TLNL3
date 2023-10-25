@@ -1,5 +1,5 @@
 import os
-from typing import List, Union, Dict, Tuple
+from typing import List, Union, Dict, Tuple, Optional
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -12,7 +12,9 @@ Text_type   = Union[List[str], List[List[str]]]
 Indix_Type  = Union[List[int], List[List[int]]]
 
 
-def openfile(file: str, line_by_line: bool=False) -> Text_type:
+def openfile(file: str, 
+             line_by_line: Optional[bool]=False
+             ) -> Text_type:
     """
     take a file name and return a list of the word of the file
     if line_by_line=True, the output will be a list of sentences
@@ -40,7 +42,8 @@ def openfile(file: str, line_by_line: bool=False) -> Text_type:
 class DataGenerator(Dataset):
     def __init__(self, 
                  config: Dict,
-                 mode: str) -> None:
+                 mode: str
+                 ) -> None:
         """
         Create a data generator
         mode: must be train, val or test. Data will be selected accordingly to mode
@@ -81,7 +84,9 @@ class DataGenerator(Dataset):
         return len(self.data)
     
 
-    def __getitem__(self, index: int) -> Tuple[torch.tensor, torch.tensor]:
+    def __getitem__(self, 
+                    index: int
+                    ) -> Tuple[torch.tensor, torch.tensor]:
         """
         take a data index and return x, y such that:
         - x are a tensor with a shape: (context_length, embedding_dim) which is the context of the sentence
@@ -145,7 +150,8 @@ class DataGenerator(Dataset):
 
 
 def text_to_indexes(text: Text_type, 
-                    dico: Dict[str, int]) -> Indix_Type:
+                    dico: Dict[str, int]
+                    ) -> Indix_Type:
     """ transforms str text into a word index list 
     if text is a word list, then new_list will be an index list
     if text is a phrase list (= word list then new_list will be an index list)
@@ -174,7 +180,10 @@ def text_to_indexes(text: Text_type,
     return new_list
 
 
-def get_dataloader(generator, config):
+def get_dataloader(generator: DataGenerator, 
+                   config: Dict
+                   ) -> DataLoader:
+    """ takes a generator and return a Dataloader according to the configuration """
     dataloader = DataLoader(generator,
                             batch_size=config.learning.batch_size,
                             shuffle=config.learning.shuffle,

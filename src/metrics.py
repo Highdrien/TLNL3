@@ -1,23 +1,31 @@
-from typing import Dict
+from typing import Dict, Optional
 import numpy as np
 import torch
 
 
-def accuracy(y_true: torch.Tensor, y_pred: torch.Tensor) -> float:
+def accuracy(y_true: torch.Tensor, 
+             y_pred: torch.Tensor
+             ) -> float:
     res = torch.argmax(y_true, dim=1) == torch.argmax(y_pred, dim=1)
     res = res.type(torch.float32)
     return res.mean().item()
 
 
-def top_k_precision(y_true: torch.Tensor, y_pred: torch.Tensor, k: int=5) -> float:
-    # https://arxiv.org/abs/1510.05976
+def top_k_precision(y_true: torch.Tensor, 
+                    y_pred: torch.Tensor, 
+                    k: Optional[int]=5
+                    ) -> float:
     _, sorted_indices = torch.topk(y_pred, k, dim=1)
     correct_predictions = torch.sum(sorted_indices == torch.argmax(y_true, dim=1, keepdim=True), dim=1)
     top_k = torch.mean(correct_predictions.float())
     return top_k.item()
 
 
-def f_score(y_true: torch.Tensor, y_pred: torch.Tensor, beta: float = 1.0, threshold: float = 0.5) -> float:
+def f_score(y_true: torch.Tensor, 
+            y_pred: torch.Tensor, 
+            beta: Optional[float] = 1.0, 
+            threshold: Optional[float] = 0.5
+            ) -> float:
     # Binarize the predictions using the given threshold
     y_pred_binary = (y_pred > threshold).float()
 
@@ -39,7 +47,9 @@ def f_score(y_true: torch.Tensor, y_pred: torch.Tensor, beta: float = 1.0, thres
     return average_f_score.item()
 
 
-def perplexite(y_true: torch.Tensor, y_pred: torch.Tensor) -> float:
+def perplexite(y_true: torch.Tensor, 
+               y_pred: torch.Tensor
+               ) -> float:
     argmax_indices = torch.argmax(y_true, dim=1)
     selected_elements = y_pred[range(len(y_pred)), argmax_indices]
 
@@ -52,7 +62,11 @@ def perplexite(y_true: torch.Tensor, y_pred: torch.Tensor) -> float:
     return - mean_log_selected_elements.item()
 
 
-def compute_metrics(config: Dict, y_true: torch.Tensor, y_pred: torch.Tensor) -> np.ndarray[float]:
+def compute_metrics(config: Dict, 
+                    y_true: torch.Tensor, 
+                    y_pred: torch.Tensor
+                    ) -> np.ndarray[float]:
+    """ run all the metrics and return a numpy array containing all the metrics value """
     metrics = []
     metrics.append(accuracy(y_true, y_pred))
 

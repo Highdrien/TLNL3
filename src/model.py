@@ -6,7 +6,23 @@ import torch.nn.functional as F
 
 
 class Model():
-    def __init__(self, embedding_dim: int, context_length: int, hidden_layer: int, vocab_size: int, learn_embedding: bool):
+    def __init__(self, 
+                 embedding_dim: int, 
+                 context_length: int, 
+                 hidden_layer: int, 
+                 vocab_size: int, 
+                 learn_embedding: bool
+                 ) -> None:
+        """ Initialise the Model
+        args:
+            - embedding_dim: the embedding dimention
+            - context_length: the number of words witch the model takes in input
+            - hiddel_layers: the number of neurones in the first feed forward neural layer
+            - vocab_size: the number of words in the vocabulary
+            - learn_embedding: if the model must to learn the embedding
+        if learn_embedding = false, the model have only 2 denses layers
+        else, the model have one embedding matix before the 2 denses layers
+        """
         # Embedding layer
         if learn_embedding:
             self.E = torch.randn((vocab_size, embedding_dim))
@@ -23,14 +39,15 @@ class Model():
         self.vocab_size = vocab_size
         self.hidden_layer = hidden_layer
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, 
+                x: torch.Tensor
+                ) -> torch.Tensor:
         """ pass x throught the model and return the output (without softmax) """
         if self.learn_embedding:
             x = x @ self.E              # get embedding
             x = x.view(len(x), -1)      # stack the context
         h = F.relu(x @ self.W + self.b1)
         y = h @ self.U + self.b2
-        # return F.softmax(y, dim=1)    # ne pas mettre softmax pour la Cross Entropy
         return y
 
     def parameters(self) -> List[torch.Tensor]:
