@@ -35,7 +35,7 @@ def main(options):
     elif options['mode'] in ['genere', 'generate']:
         config = find_config(options['path'])
         config = load_config(config)
-        genere(config, options['path'])
+        genere(config, options['path'], temperature=0.6, top_k=5)
     elif options['mode'] == 'test':
         config = find_config(options['path'])
         config = load_config(config)

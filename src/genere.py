@@ -12,8 +12,8 @@ from src.model import get_model
 
 def genere(config: Dict, 
            logging_path: str, 
-           temperature: Optional[float]=0.7,
-           top_k: Optional[int]=3
+           temperature: Optional[float]=1,
+           top_k: Optional[int]=1
            ) -> List[int]:
     """ generate a text from an input text
     if the input text is None, generate a text from <s><s>...<s> """
