@@ -52,16 +52,16 @@ La Figure~\ref{fig:model1} représente ce modèle.
 \subsection{Formalisme mathématiques}
 En notant, $W \in \mathcal{M}_{k \times e, h_1}(\mathbb{R})$, et $U \in \mathcal{M}_{h, V}(\mathbb{R})$ les matrices de poids, 
 $(b_1,b_2) \in \mathbb{R}^{h} \times \mathbb{R}^{V}$ les biais, $X \in \mathbb{R}^{k \times e}$ le vecteur d'entrée, 
-l'équation~\eqref{eq:model1} donne la fonction de sortie $F(X) \in \mathbb{R}^{V}$ du modèle. 
+l'équation~\ref{eq:model1} donne la fonction de sortie $F(X) \in \mathbb{R}^{V}$ du modèle. 
 
+\begin{equation}
+  F(x)=softmax(U(ReLU(WX+b_1))+b_2)
+  \label{eq:model1}
+\end{equation}
 
 Après plusieurs essais, nous avons choisi de prendre: $k=3$, $e=100$, $h_1=256$. Et dans nos données d'entraînement, on avait un 
 vocabulaire contenant: $V=2908$ mots distincts. Avec ces hyperparamètres, nous avons dans ce modèle $824412$ paramètres apprenables.
-% temps d'apprentisage pour 10 epochs: 13min
 
-\begin{flalign}
-    & F(x)=softmax(U(ReLU(WX+b_1))+b_2) \label{eq:model1} &
-\end{flalign}
 
 \begin{figure}
     \centering
@@ -151,13 +151,17 @@ $E \in \mathcal{M}_{V, e}(\mathbb{R})$ est la matrice d'embedding. Cependant, ce
 fallut transformer le mot $i$ en un vecteur $x \in \mathbb{R}^V$ one-hot, et faire $x \times E$ pour obtenir l'embedding du 
 mots $i$, qui cette fois-ci, est une opération dérivable. 
 Une fois cette adaptation faite, on a rajouté cette opération dans notre modèle et nous obtenons donc un nouveau modèle illustré 
-par la Figure~\ref{fig:model2}, et donné par l'équation~\eqref{eq:model2}.
+par la Figure~\ref{fig:model2}, et donné par l'équation~\ref{eq:model2}.
 
 
-\begin{flalign}
-    & F(x)=softmax(U(ReLU(W\tilde{X}+b_1))+b_2) \label{eq:model2} & \\
-    & \quad \text{où } \tilde{X}=flatten(XE)  \quad \text{et} \quad X \in \mathcal{M}_{k, V}(\mathbb{R}) \notag &
-\end{flalign}
+\begin{equation}
+  F(x)=softmax(U(ReLU(W\tilde{X}+b_1))+b_2)
+  \label{eq:model2}
+\end{equation}
+
+où $\tilde{X}=flatten(XE)$ et $X \in \mathcal{M}_{k, V}(\mathbb{R})$.
+
+
 
 \begin{figure}
     \centering
@@ -275,6 +279,69 @@ d'obtenir de meilleures performances que celles du modèle où les embeddings so
 \end{figure}
 
 
+\section{Génération de texte des modèles}
+
+Après les entraînements des modèles, nous avons généré du texte avec les modèles à partir d'une entrée (input). Nous avons choisi
+arbitrairement un input qui est: \textit{le vieillard fit un} car il fait partie du corpus de données d'entrainement.
+Nous avons ensuite généré les 10 mots suivants grâce aux modèles. La Table~\ref{tab:generate} représente les résultats obtenues. 
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{|c|c|}
+      \hline
+      modèles & génération \\
+      \hline
+      \textit{FROZEN} & le vieillard fit un ,,,,,,,,,, \\
+      \textit{SCRATCH} & le vieillard fit un certains,,,,,,,,,\\
+      \textit{ADAPT} & le vieillard fit un ,,,,,,,,,,\\
+      \hline
+  \end{tabular}
+  \caption{Résultat des générations de 10 mots des modèles à partir de: \textit{le vieillard fit un}.}
+  \label{tab:generate}
+\end{table}
+
+On constate que les mots suivants prédits par notre modèle sont peu pertinents et que surtout le modèle renvoie plusieurs fois le 
+même mot à la suite, ici le mot ','. Ceci peut s'interpréter comme un phénomène de \textit{mode collapse}, c'est à dire 
+que le modèle présente peu de variété dans ses sorties. En effet le mot virgule étant très fréquent dans le corpus 
+d'entraînement, il est normal qu'un modèle peu performant ne parvienne à générer que ce mot là.
+
+Le problème vient de la façon dont on choisi le mot à générer à chaque étapes: on prend le mot $m^*$ tel que
+$m^* = \text{argmax}_{m \in V} f(X)_m$, où $f$ représente le modèles choisie et $f(X)_m$ est la propabilité du mot $m$ connaissant 
+le contexte $X$. Pour tenter de régler ce problème, à chaque étape, on prend les 5
+mots qui sont les plus prédits (ie les 5 mots qui maximine $f(X)_m$), et l'on choisi de prendre un de ces 5 mots avec la loi: 
+$P(m_i|X) = \alpha f(X)_{m_i}$, où $\alpha = 1 / \sum_{i=1}^{5} f(X)_{m_i}$. On rajoute aussi une \textit{temperature} $t\in ]0, 1]$ 
+à la fonction softmax dans 
+les équations~\ref{eq:model1} et~\ref{eq:model2}, décrite par la formule~\ref{eq:softmax}. Cela permet de rendre
+la distribution $f(X)$ plus homogènes et donc de générer un mot $m$ différent que $m^*$.
+
+\begin{equation}
+  \text{softmax}(X, t)_i = \frac{e^{X_i/t}}{\sum_{j}e^{X_j/t}}
+  \label{eq:softmax}
+\end{equation}
+
+On a donc ensuite fait de nouvelles générations de textes avec les 3 modèles. La Table~\ref{tab:generate2}
+montre ces générations\footnote{Attention, il faut noter que cette nouvelle méthode de génération est stochastique 
+et que par conséquant, les résultats présentés ne sont qu'une génération possible parmis l'ensemble des générations.}. 
+On observe une plus grande variété de mots prédits, comme des points ou des symboles de fin de génération (\textless/s\textgreater).
+On remarque aussi que les points sont toujours suivit de symboles \textless/s\textgreater, ce qui est normal car la base de données est une liste de 
+phrase et non un grand texte. Cependant on voit quand même les limites des 3 modèles sur la génération sur le peu de sens de la phrase générée.
+
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{|c|c|}
+      \hline
+      modèles & génération \\
+      \hline
+      \textit{FROZEN} & le vieillard fit un , . </s>  \\
+      \textit{SCRATCH} & le vieillard fit un signe à la et . </s>  \\
+      \textit{ADAPT} & le vieillard fit un de , . </s>  \\
+      \hline
+  \end{tabular}
+  \caption{Résultat des générations de 10 mots des modèles à partir de: \textit{le vieillard fit un}, avec une température de 0.6}
+  \label{tab:generate2}
+\end{table}
+
 \section{Conclusions et perspectives}
 
 \subsection{Performance}
@@ -310,7 +377,9 @@ Il peut aussi être intéressant de regarder le temps d'entraînement des diffé
 entraînés sur un Windows 11 avec un intel i7 de 12ème génération et une carte graphique: Nvidia RTX 3050 modèle ordinateur portable.
 On remarque sans surprise que l'entraînement le plus rapide est celui de \textit{FROZEN} car c'est le modèle qui a le moins de paramètres.
 Il est très intéressant de voir que le modèle \textit{ADAPT} s'entraîne beaucoup plus vite que le modèle \textit{SCRATCH}, alors que le
-nombre de paramètres est le même. Notre hypothèse est que: \textit{mettre notre hypothèse}.
+nombre de paramètres est le même. Notre hypothèse est que les poids de la matrice d'embeddings étant déja pertinents, peut-être que lors 
+de la rétro-propagation certains gradients valent dès le début 0 et ne sont donc pas propagés, ce qui fait que la rétro-propagation prend 
+moins de temps.
 En comparant les résultats des modèles et leurs temps d'entraînement, on peut voir qu'il n'est pas rentable d'entraîner un modèle comme
 celui de \textit{SCRATCH}, si l'on a déjà une partie pré-entraîné car cela prend beaucoup de temps et que l'on des performances 
 plus faibles.
@@ -330,7 +399,6 @@ plus faibles.
     \label{tab:times}
 \end{table}
 
-\subsection{Génération de texte}
 
 \newpage
 
