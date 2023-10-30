@@ -9,7 +9,7 @@ from utils.Vocab import Vocab
 
 # Type: # text can be a list of words or a list of sentences (ie list of list of words)
 Text_type   = Union[List[str], List[List[str]]]
-Indix_Type  = Union[List[int], List[List[int]]]
+Index_Type  = Union[List[int], List[List[int]]]
 
 
 def openfile(file: str, 
@@ -117,7 +117,7 @@ class DataGenerator(Dataset):
         return self.vocab_size
     
 
-    def split_text(self, text: Indix_Type) -> List[Indix_Type]:
+    def split_text(self, text: Index_Type) -> List[Index_Type]:
         """ take a text and return all the <context_length> consecutive words """
         new_list = []
         if type(text[0]) == int:
@@ -151,7 +151,7 @@ class DataGenerator(Dataset):
 
 def text_to_indexes(text: Text_type, 
                     dico: Dict[str, int]
-                    ) -> Indix_Type:
+                    ) -> Index_Type:
     """ transforms str text into a word index list 
     if text is a word list, then new_list will be an index list
     if text is a phrase list (= word list then new_list will be an index list)
