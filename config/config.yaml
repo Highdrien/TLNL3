@@ -1,45 +1,45 @@
-name: learnfromword2vect
+name: adapt
 
 # data options
 data:
-    path: 'data'
-    context_length: 3
-    vocab_size: 2908
-    line_by_line: true
+    path: 'data'                # path to data
+    context_length: 3           # number of words given to the model
+    vocab_size: 2908            # number of words known by the model
+    line_by_line: true          # read the data line by line
 
 # model options
 model:
-    embedding_dim: 100
-    hidden_layer: 256
-    save_checkpoint: 'best'
+    embedding_dim: 100          # dimention of embedding
+    hidden_layer: 256           # number of neurons in the dense layer
+    save_checkpoint: 'best'     # save checkpoints only on the best validation loss
     embedding:
-        learn_embedding: true
-        learn_from_vect_to_vect: true
-        vect_to_vect_path: 'data\embeddings-word2vecofficial.train.unk5.txt'
+        learn_embedding: true       # the model learn embedding (adds embedding layer at the beginning of the model)
+        learn_from_word2vec: true   # the model initialize embedding with Word2Vect (only if learn_embedding=true)
+        word2vect_path: 'data\embeddings-word2vecofficial.train.unk5.txt'
 
 # learning options
 learning:
-    loss: crossentropy
-    optimizer: 'adam'
-    learning_rate: 0.01
-    milesstone: [5, 15]
-    gamma: 0.1
-    epochs: 30
-    batch_size: 256
-    save_learning_curves: true
-    shuffle: true
-    drop_last: true
+    loss: crossentropy          # name of loss. Can be crossentropy or PerplexiteLoss
+    optimizer: 'adam'           # optimizer. Only adam was implemented
+    learning_rate: 0.01         # learning rate
+    milesstone: [5, 15]         # gradient decay at epoch 5 and 15
+    gamma: 0.1                  # learning rate will be multiplicate by 0.1 at epochs 5 and 15
+    epochs: 30                  # number of epochs
+    batch_size: 256             # batch size
+    save_learning_curves: true  # save the learning curves at the end of experiements
+    shuffle: true               # shuffle the data
+    drop_last: true             # drop last batch (in order to have the same size at the end)
 
 # metrics options
 metrics:
-    accuracy: true
-    top_k: 5
-    f_score: true
-    preplexite: true
+    accuracy: true              # accuracy metric
+    top_k: 5                    # top k metric with k=5
+    f_score: true               # f1 score metric
+    preplexite: true            # perplexity metric
 
 # generate options
 generate:
-    folder: 'generate'
-    input_file: 'input.txt'
-    output_file: 'output_<experiment_name>.txt'
-    nb_words: 100
+    folder: 'generate'          # src folder which contain input file and will have the generate file
+    input_file: 'input.txt'     # file which contain the input to generete text after
+    output_file: 'output_<experiment_name>.txt' # name of output file. Replaces <experiment_name> by the the name of the experiment
+    nb_words: 100               # number of words in the generation

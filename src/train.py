@@ -33,8 +33,8 @@ def train(config: Dict) -> None:
     print(model)
     
     # Get embedding from word2vect
-    if config.model.embedding.learn_embedding and config.model.embedding.learn_from_vect_to_vect:
-        print(f'get emebedding from {config.model.embedding.vect_to_vect_path}')
+    if config.model.embedding.learn_embedding and config.model.embedding.learn_from_word2vec:
+        print(f'get emebedding from {config.model.embedding.word2vect_path}')
         model.copy_embedding(train_generator.get_embedding())
 
     # Dataloader

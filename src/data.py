@@ -60,7 +60,7 @@ class DataGenerator(Dataset):
         print(f'{mode = }')
         file = os.path.join(config.data.path, 'Le_comte_de_Monte_Cristo.' + mode + '.txt')
         
-        self.embedding_path = config.model.embedding.vect_to_vect_path
+        self.embedding_path = config.model.embedding.word2vect_path
         self.vocab = self.get_vocab()
         self.vocab_size = len(self.vocab.dico_voca)
         self.context_length = config.data.context_length
