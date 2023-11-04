@@ -1,4 +1,4 @@
-config_metadata: 'Saving time : 10/14/2023, 14:08:20'
+config_metadata: 'Saving time : 10/16/2023, 16:02:20'
 name: 'learnfromscratch'
 
 # data options
@@ -14,9 +14,9 @@ model:
     hidden_layer: 256
     save_checkpoint: 'best'
     embedding:
-        learn_embedding: false
-        learn_from_vect_to_vect: true
-        vect_to_vect_path: 'data\embeddings-word2vecofficial.train.unk5.txt'
+        learn_embedding: true
+        learn_from_word2vec: false
+        word2vect_path: 'data\embeddings-word2vecofficial.train.unk5.txt'
 
 # learning options
 learning:
@@ -25,7 +25,7 @@ learning:
     learning_rate: 0.01
     milesstone: [5]
     gamma: 0.1
-    epochs: 10
+    epochs: 30
     batch_size: 256
     save_learning_curves: true
     shuffle: true
